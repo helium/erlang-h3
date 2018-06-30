@@ -1,5 +1,16 @@
 -module(h3).
--export([num_hexagons/1, edge_length_meters/1, edge_length_kilometers/1, geo_to_h3/2]).
+
+-export([num_hexagons/1,
+         edge_length_meters/1,
+         edge_length_kilometers/1,
+         degs_to_rads/1,
+         rads_to_degs/1,
+         max_k_ring_size/1,
+         hex_area_m2/1,
+         hex_area_km2/1,
+         geo_to_h3/2
+        ]).
+
 -on_load(init/0).
 
 -define(APPNAME, h3).
@@ -19,6 +30,26 @@ edge_length_meters(_) ->
 
 -spec edge_length_kilometers(resolution()) -> float().
 edge_length_kilometers(_) ->
+    not_loaded(?LINE).
+
+-spec degs_to_rads(float()) -> float().
+degs_to_rads(_) ->
+    not_loaded(?LINE).
+
+-spec rads_to_degs(float()) -> float().
+rads_to_degs(_) ->
+    not_loaded(?LINE).
+
+-spec max_k_ring_size(float()) -> float().
+max_k_ring_size(_) ->
+    not_loaded(?LINE).
+
+-spec hex_area_m2(non_neg_integer()) -> float().
+hex_area_m2(_) ->
+    not_loaded(?LINE).
+
+-spec hex_area_km2(non_neg_integer()) -> float().
+hex_area_km2(_) ->
     not_loaded(?LINE).
 
 -spec geo_to_h3(coord(), resolution()) -> h3index().
