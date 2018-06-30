@@ -1,5 +1,9 @@
 -module(h3).
--export([num_hexagons/1, edge_length_meters/1, edge_length_kilometers/1]).
+-export([num_hexagons/1,
+         edge_length_meters/1,
+         edge_length_kilometers/1,
+         degs_to_rads/1
+        ]).
 -on_load(init/0).
 
 -define(APPNAME, h3).
@@ -12,6 +16,9 @@ edge_length_meters(_) ->
     not_loaded(?LINE).
 
 edge_length_kilometers(_) ->
+    not_loaded(?LINE).
+
+degs_to_rads(_) ->
     not_loaded(?LINE).
 
 init() ->
