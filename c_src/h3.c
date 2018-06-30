@@ -85,11 +85,63 @@ erl_degs_to_rads(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_double(env, result);
 }
 
+static ERL_NIF_TERM
+erl_rads_to_degs(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    double res;
+    if (!enif_get_double(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+
+    double result = radsToDegs(res);
+    return enif_make_double(env, result);
+}
+
+static ERL_NIF_TERM
+erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res;
+    if (!enif_get_int(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+
+    int result = maxKringSize(res);
+    return enif_make_int(env, result);
+}
+
+static ERL_NIF_TERM
+erl_hex_area_km2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res;
+    if (!enif_get_int(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+
+    double result = hexAreaKm2(res);
+    return enif_make_double(env, result);
+}
+
+static ERL_NIF_TERM
+erl_hex_area_m2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res;
+    if (!enif_get_int(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+
+    double result = hexAreaM2(res);
+    return enif_make_double(env, result);
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
     {"edge_length_meters", 1, erl_edge_length_meters, 0},
     {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0},
-    {"degs_to_rads", 1, erl_degs_to_rads, 0}
+    {"degs_to_rads", 1, erl_degs_to_rads, 0},
+    {"rads_to_degs", 1, erl_rads_to_degs, 0},
+    {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
+    {"hex_area_km2", 1, erl_hex_area_km2, 0},
+    {"hex_area_m2", 1, erl_hex_area_m2, 0}
     };
 
 static int
