@@ -195,6 +195,21 @@ erl_h3_to_string(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_string(env, out, ERL_NIF_LATIN1);
 }
 
+static ERL_NIF_TERM
+erl_string_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    char in[17];
+    if (!enif_get_string(env, argv[0], in, 17, ERL_NIF_LATIN1)) {
+        return enif_make_badarg(env);
+    }
+
+    uint64_t h3idx = stringToH3(in);
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+    return enif_make_uint64(env, h3idx);
+}
 
 
 static ErlNifFunc nif_funcs[] = {
@@ -208,7 +223,8 @@ static ErlNifFunc nif_funcs[] = {
     {"hex_area_m2", 1, erl_hex_area_m2, 0},
     {"geo_to_h3", 2, erl_geo_to_h3, 0},
     {"h3_to_geo", 1, erl_h3_to_geo, 0},
-    {"h3_to_string", 1, erl_h3_to_string, 0}
+    {"h3_to_string", 1, erl_h3_to_string, 0},
+    {"string_to_h3", 1, erl_string_to_h3, 0}
     };
 
 static int

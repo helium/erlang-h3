@@ -10,7 +10,8 @@
          hex_area_km2/1,
          geo_to_h3/2,
          h3_to_geo/1,
-         h3_to_string/1
+         h3_to_string/1,
+         string_to_h3/1
         ]).
 
 -on_load(init/0).
@@ -64,6 +65,10 @@ h3_to_geo(_) ->
 
 -spec h3_to_string(h3index()) -> string().
 h3_to_string(_) ->
+    not_loaded(?LINE).
+
+-spec string_to_h3(string()) -> h3index().
+string_to_h3(_) ->
     not_loaded(?LINE).
 
 init() ->
