@@ -162,6 +162,41 @@ erl_geo_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_uint64(env, result);
 }
 
+static ERL_NIF_TERM
+erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    GeoCoord coord;
+    h3ToGeo(h3idx, &coord);
+    return enif_make_tuple2(env, enif_make_double(env, coord.lat), enif_make_double(env, coord.lon));
+}
+
+static ERL_NIF_TERM
+erl_h3_to_string(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+    char out[17];
+    h3ToString(h3idx, out, 17);
+    return enif_make_string(env, out, ERL_NIF_LATIN1);
+}
+
+
+
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
     {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -171,7 +206,9 @@ static ErlNifFunc nif_funcs[] = {
     {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
     {"hex_area_km2", 1, erl_hex_area_km2, 0},
     {"hex_area_m2", 1, erl_hex_area_m2, 0},
-    {"geo_to_h3", 2, erl_geo_to_h3, 0}
+    {"geo_to_h3", 2, erl_geo_to_h3, 0},
+    {"h3_to_geo", 1, erl_h3_to_geo, 0},
+    {"h3_to_string", 1, erl_h3_to_string, 0}
     };
 
 static int

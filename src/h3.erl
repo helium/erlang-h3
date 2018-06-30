@@ -8,7 +8,9 @@
          max_k_ring_size/1,
          hex_area_m2/1,
          hex_area_km2/1,
-         geo_to_h3/2
+         geo_to_h3/2,
+         h3_to_geo/1,
+         h3_to_string/1
         ]).
 
 -on_load(init/0).
@@ -54,6 +56,14 @@ hex_area_km2(_) ->
 
 -spec geo_to_h3(coord(), resolution()) -> h3index().
 geo_to_h3(_, _) ->
+    not_loaded(?LINE).
+
+-spec h3_to_geo(h3index()) -> coord().
+h3_to_geo(_) ->
+    not_loaded(?LINE).
+
+-spec h3_to_string(h3index()) -> string().
+h3_to_string(_) ->
     not_loaded(?LINE).
 
 init() ->
