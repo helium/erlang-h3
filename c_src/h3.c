@@ -73,10 +73,41 @@ erl_edge_length_kilometers(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_double(env, result);
 }
 
+static ERL_NIF_TERM
+erl_geo_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    const ERL_NIF_TERM *geo;
+    int arity;
+    if (!enif_is_tuple(env, argv[0]) || !enif_get_tuple(env, argv[0], &arity, &geo) || arity != 2) {
+        return enif_make_badarg(env);
+    }
+    double lat, lon;
+    if (!enif_get_double(env, geo[0], &lat) || !enif_get_double(env, geo[1], &lon)) {
+        return enif_make_badarg(env);
+    }
+    int res;
+    if (!enif_get_int(env, argv[1], &res)) {
+        return enif_make_badarg(env);
+    }
+
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
+    GeoCoord coord;
+    coord.lat = lat;
+    coord.lon = lon;
+    uint64_t result = geoToH3(&coord, res);
+    return enif_make_uint64(env, result);
+}
+
+
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
     {"edge_length_meters", 1, erl_edge_length_meters, 0},
-    {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0}
+    {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0},
+    {"geo_to_h3", 2, erl_geo_to_h3, 0}
     };
 
 static int
