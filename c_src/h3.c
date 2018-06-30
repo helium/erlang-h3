@@ -32,12 +32,51 @@ erl_num_hexagons(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[0], &res)) {
         return enif_make_badarg(env);
     }
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
     int64_t result = numHexagons(res);
     return enif_make_int64(env, result);
 }
 
+static ERL_NIF_TERM
+erl_edge_length_meters(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res;
+    if (!enif_get_int(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
+    double result = edgeLengthM(res);
+    return enif_make_double(env, result);
+}
+
+static ERL_NIF_TERM
+erl_edge_length_kilometers(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res;
+    if (!enif_get_int(env, argv[0], &res)) {
+        return enif_make_badarg(env);
+    }
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
+    double result = edgeLengthKm(res);
+    return enif_make_double(env, result);
+}
+
 static ErlNifFunc nif_funcs[] = {
-    {"num_hexagons", 1, erl_num_hexagons, 0}
+    {"num_hexagons", 1, erl_num_hexagons, 0},
+    {"edge_length_meters", 1, erl_edge_length_meters, 0},
+    {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0}
     };
 
 static int

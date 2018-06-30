@@ -1,11 +1,17 @@
 -module(h3).
--export([num_hexagons/1]).
+-export([num_hexagons/1, edge_length_meters/1, edge_length_kilometers/1]).
 -on_load(init/0).
 
 -define(APPNAME, h3).
 -define(LIBNAME, 'h3').
 
 num_hexagons(_) ->
+    not_loaded(?LINE).
+
+edge_length_meters(_) ->
+    not_loaded(?LINE).
+
+edge_length_kilometers(_) ->
     not_loaded(?LINE).
 
 init() ->
