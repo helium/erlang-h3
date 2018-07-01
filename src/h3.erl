@@ -18,7 +18,9 @@
          is_pentagon/1,
          parent/2,
          children/2,
-         k_ring/2
+         k_ring/2,
+         max_k_ring_size/1,
+         indices_are_neighbors/2
         ]).
 
 -on_load(init/0).
@@ -104,6 +106,14 @@ children(_, _) ->
 
 -spec k_ring(h3index(), non_neg_integer()) -> [h3index(),...].
 k_ring(_, _) ->
+    not_loaded(?LINE).
+
+-spec max_k_ring_size(non_neg_integer()) -> non_neg_integer().
+max_k_ring_size(_) ->
+    not_loaded(?LINE).
+
+-spec indices_are_neighbors(h3index(), h3index()) -> boolean().
+indices_are_neighbors(_, _) ->
     not_loaded(?LINE).
 
 init() ->

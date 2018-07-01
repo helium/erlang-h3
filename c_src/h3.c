@@ -402,6 +402,38 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return list;
 }
 
+static ERL_NIF_TERM
+erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int k;
+    if (!enif_get_int(env, argv[0], &k)) {
+        return enif_make_badarg(env);
+    }
+
+    int result = maxKringSize(k);
+    return enif_make_int(env, result);
+}
+
+static ERL_NIF_TERM
+erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx_origin;
+    if (!enif_get_uint64(env, argv[0], &h3idx_origin)) {
+        return enif_make_badarg(env);
+    }
+
+    uint64_t h3idx_destination;
+    if (!enif_get_uint64(env, argv[1], &h3idx_destination)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IndexesAreNeighbors(h3idx_origin, h3idx_destination) == 0) {
+        return mk_atom(env, "false");
+    }
+
+    return mk_atom(env, "true");
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
     {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -421,7 +453,9 @@ static ErlNifFunc nif_funcs[] = {
     {"is_pentagon", 1, erl_is_pentagon, 0},
     {"parent", 2, erl_parent, 0},
     {"children", 2, erl_children, 0},
-    {"k_ring", 2, erl_k_ring, 0}
+    {"k_ring", 2, erl_k_ring, 0},
+    {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
+    {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0}
     };
 
 static int
