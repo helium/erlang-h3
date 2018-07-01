@@ -299,6 +299,78 @@ erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return mk_atom(env, "true");
 }
 
+static ERL_NIF_TERM
+erl_parent(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    int res;
+    if (!enif_get_int(env, argv[1], &res)) {
+        return enif_make_badarg(env);
+    }
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
+    if (res >= h3GetResolution(h3idx)) {
+        // asking for a parent with a higher resolution is nonsense
+        return enif_make_badarg(env);
+    }
+
+    return enif_make_uint64(env, h3ToParent(h3idx, res));
+}
+
+static ERL_NIF_TERM
+erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    int res;
+    if (!enif_get_int(env, argv[1], &res)) {
+        return enif_make_badarg(env);
+    }
+    if (res < 0 || res > 15) {
+        // invalid resolution
+        return enif_make_badarg(env);
+    }
+
+    if (res <= h3GetResolution(h3idx)) {
+        // asking for children with lower resolution is nonsense
+        return enif_make_badarg(env);
+    }
+
+    int childcount = maxH3ToChildrenSize(h3idx, res);
+
+    uint64_t *children = calloc(childcount, sizeof(uint64_t));
+
+    if (children == NULL) {
+        return enif_make_badarg(env);
+    }
+
+    h3ToChildren(h3idx, res, children);
+
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    for (int i = childcount - 1; i >= 0; i--) {
+        list = enif_make_list_cell(env, enif_make_uint64(env, children[i]), list);
+    }
+    free(children);
+    return list;
+}
 
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
@@ -317,7 +389,9 @@ static ErlNifFunc nif_funcs[] = {
     {"get_base_cell", 1, erl_get_base_cell, 0},
     {"is_valid", 1, erl_is_valid, 0},
     {"is_class3", 1, erl_is_class3, 0},
-    {"is_pentagon", 1, erl_is_pentagon, 0}
+    {"is_pentagon", 1, erl_is_pentagon, 0},
+    {"parent", 2, erl_parent, 0},
+    {"children", 2, erl_children, 0}
     };
 
 static int

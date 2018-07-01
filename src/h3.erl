@@ -16,7 +16,9 @@
          get_base_cell/1,
          is_valid/1,
          is_class3/1,
-         is_pentagon/1
+         is_pentagon/1,
+         parent/2,
+         children/2
         ]).
 
 -on_load(init/0).
@@ -94,6 +96,14 @@ is_class3(_) ->
 
 -spec is_pentagon(h3index()) -> boolean().
 is_pentagon(_) ->
+    not_loaded(?LINE).
+
+-spec parent(h3index(), resolution()) -> h3index().
+parent(_, _) ->
+    not_loaded(?LINE).
+
+-spec children(h3index(), resolution()) -> [h3index(),...].
+children(_, _) ->
     not_loaded(?LINE).
 
 init() ->
