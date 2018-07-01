@@ -8,10 +8,15 @@
          max_k_ring_size/1,
          hex_area_m2/1,
          hex_area_km2/1,
-         geo_to_h3/2,
-         h3_to_geo/1,
-         h3_to_string/1,
-         string_to_h3/1
+         from_geo/2,
+         to_geo/1,
+         to_string/1,
+         from_string/1,
+         get_resolution/1,
+         get_base_cell/1,
+         is_valid/1,
+         is_class3/1,
+         is_pentagon/1
         ]).
 
 -on_load(init/0).
@@ -55,20 +60,40 @@ hex_area_m2(_) ->
 hex_area_km2(_) ->
     not_loaded(?LINE).
 
--spec geo_to_h3(coord(), resolution()) -> h3index().
-geo_to_h3(_, _) ->
+-spec from_geo(coord(), resolution()) -> h3index().
+from_geo(_, _) ->
     not_loaded(?LINE).
 
--spec h3_to_geo(h3index()) -> coord().
-h3_to_geo(_) ->
+-spec to_geo(h3index()) -> coord().
+to_geo(_) ->
     not_loaded(?LINE).
 
--spec h3_to_string(h3index()) -> string().
-h3_to_string(_) ->
+-spec to_string(h3index()) -> string().
+to_string(_) ->
     not_loaded(?LINE).
 
--spec string_to_h3(string()) -> h3index().
-string_to_h3(_) ->
+-spec from_string(string()) -> h3index().
+from_string(_) ->
+    not_loaded(?LINE).
+
+-spec get_resolution(h3index()) -> resolution().
+get_resolution(_) ->
+    not_loaded(?LINE).
+
+-spec get_base_cell(h3index()) -> h3index().
+get_base_cell(_) ->
+    not_loaded(?LINE).
+
+-spec is_valid(h3index()) -> boolean().
+is_valid(_) ->
+    not_loaded(?LINE).
+
+-spec is_class3(h3index()) -> boolean().
+is_class3(_) ->
+    not_loaded(?LINE).
+
+-spec is_pentagon(h3index()) -> boolean().
+is_pentagon(_) ->
     not_loaded(?LINE).
 
 init() ->

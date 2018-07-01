@@ -211,6 +211,94 @@ erl_string_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_uint64(env, h3idx);
 }
 
+static ERL_NIF_TERM
+erl_get_resolution(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    int result = h3GetResolution(h3idx);
+    return enif_make_int(env, result);
+}
+
+
+static ERL_NIF_TERM
+erl_get_base_cell(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    int result = h3GetBaseCell(h3idx);
+    return enif_make_int(env, result);
+}
+
+static ERL_NIF_TERM
+erl_is_valid(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return mk_atom(env, "false");
+    }
+
+    return mk_atom(env, "true");
+}
+
+
+static ERL_NIF_TERM
+erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsResClassIII(h3idx) == 0) {
+        return mk_atom(env, "false");
+    }
+
+    return mk_atom(env, "true");
+}
+
+
+static ERL_NIF_TERM
+erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsPentagon(h3idx) == 0) {
+        return mk_atom(env, "false");
+    }
+
+    return mk_atom(env, "true");
+}
+
 
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
@@ -221,10 +309,15 @@ static ErlNifFunc nif_funcs[] = {
     {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
     {"hex_area_km2", 1, erl_hex_area_km2, 0},
     {"hex_area_m2", 1, erl_hex_area_m2, 0},
-    {"geo_to_h3", 2, erl_geo_to_h3, 0},
-    {"h3_to_geo", 1, erl_h3_to_geo, 0},
-    {"h3_to_string", 1, erl_h3_to_string, 0},
-    {"string_to_h3", 1, erl_string_to_h3, 0}
+    {"from_geo", 2, erl_geo_to_h3, 0},
+    {"to_geo", 1, erl_h3_to_geo, 0},
+    {"to_string", 1, erl_h3_to_string, 0},
+    {"from_string", 1, erl_string_to_h3, 0},
+    {"get_resolution", 1, erl_get_resolution, 0},
+    {"get_base_cell", 1, erl_get_base_cell, 0},
+    {"is_valid", 1, erl_is_valid, 0},
+    {"is_class3", 1, erl_is_class3, 0},
+    {"is_pentagon", 1, erl_is_pentagon, 0}
     };
 
 static int
