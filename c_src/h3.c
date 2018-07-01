@@ -98,18 +98,6 @@ erl_rads_to_degs(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static ERL_NIF_TERM
-erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
-{
-    int res;
-    if (!enif_get_int(env, argv[0], &res)) {
-        return enif_make_badarg(env);
-    }
-
-    int result = maxKringSize(res);
-    return enif_make_int(env, result);
-}
-
-static ERL_NIF_TERM
 erl_hex_area_km2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
@@ -372,13 +360,54 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return list;
 }
 
+static ERL_NIF_TERM
+erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!enif_get_uint64(env, argv[0], &h3idx)) {
+        return enif_make_badarg(env);
+    }
+
+    if (h3IsValid(h3idx) == 0) {
+        return enif_make_badarg(env);
+    }
+
+    int k;
+    if (!enif_get_int(env, argv[1], &k)) {
+        return enif_make_badarg(env);
+    }
+    if (k < 0) {
+        // invalid k
+        return enif_make_badarg(env);
+    }
+
+    int kringsize = maxKringSize(k);
+
+    uint64_t *h3indices = calloc(kringsize, sizeof(uint64_t));
+
+    if (h3indices == NULL) {
+        return enif_make_badarg(env);
+    }
+
+    kRing(h3idx, k, h3indices);
+
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    // Output is placed in the provided array in no particular order. Elements of the output array may be left zero, as can happen when crossing a pentagon.
+    for (int i = kringsize - 1; i >= 0; i--) {
+        if (h3indices[i] != 0) {
+            list = enif_make_list_cell(env, enif_make_uint64(env, h3indices[i]), list);
+        }
+    }
+    free(h3indices);
+    return list;
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"num_hexagons", 1, erl_num_hexagons, 0},
     {"edge_length_meters", 1, erl_edge_length_meters, 0},
     {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0},
     {"degs_to_rads", 1, erl_degs_to_rads, 0},
     {"rads_to_degs", 1, erl_rads_to_degs, 0},
-    {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
     {"hex_area_km2", 1, erl_hex_area_km2, 0},
     {"hex_area_m2", 1, erl_hex_area_m2, 0},
     {"from_geo", 2, erl_geo_to_h3, 0},
@@ -391,7 +420,8 @@ static ErlNifFunc nif_funcs[] = {
     {"is_class3", 1, erl_is_class3, 0},
     {"is_pentagon", 1, erl_is_pentagon, 0},
     {"parent", 2, erl_parent, 0},
-    {"children", 2, erl_children, 0}
+    {"children", 2, erl_children, 0},
+    {"k_ring", 2, erl_k_ring, 0}
     };
 
 static int

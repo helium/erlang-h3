@@ -5,7 +5,6 @@
          edge_length_kilometers/1,
          degs_to_rads/1,
          rads_to_degs/1,
-         max_k_ring_size/1,
          hex_area_m2/1,
          hex_area_km2/1,
          from_geo/2,
@@ -18,7 +17,8 @@
          is_class3/1,
          is_pentagon/1,
          parent/2,
-         children/2
+         children/2,
+         k_ring/2
         ]).
 
 -on_load(init/0).
@@ -48,10 +48,6 @@ degs_to_rads(_) ->
 
 -spec rads_to_degs(float()) -> float().
 rads_to_degs(_) ->
-    not_loaded(?LINE).
-
--spec max_k_ring_size(float()) -> float().
-max_k_ring_size(_) ->
     not_loaded(?LINE).
 
 -spec hex_area_m2(non_neg_integer()) -> float().
@@ -104,6 +100,10 @@ parent(_, _) ->
 
 -spec children(h3index(), resolution()) -> [h3index(),...].
 children(_, _) ->
+    not_loaded(?LINE).
+
+-spec k_ring(h3index(), non_neg_integer()) -> [h3index(),...].
+k_ring(_, _) ->
     not_loaded(?LINE).
 
 init() ->
