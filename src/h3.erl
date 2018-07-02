@@ -20,6 +20,7 @@
          parent/2,
          children/2,
          k_ring/2,
+         k_ring_distances/2,
          max_k_ring_size/1,
          indices_are_neighbors/2
         ]).
@@ -119,11 +120,26 @@ parent(_, _) ->
 children(_, _) ->
     not_loaded(?LINE).
 
--spec k_ring(h3index(), non_neg_integer()) -> [h3index(),...].
+%% @doc Produces indices within the given distance K from the given
+%% origin Index. k-ring 0 is defined as the origin index, k-ring 1 is
+%% defined as k-ring 0 and all neighboring indices, and so on. Output
+%% is returned in no particular order.
+-spec k_ring(Index::h3index(), K::non_neg_integer()) -> [h3index(),...].
 k_ring(_, _) ->
     not_loaded(?LINE).
 
--spec max_k_ring_size(non_neg_integer()) -> non_neg_integer().
+%% @doc Produces indices and the associated distance within the given
+%% distance K from the given origin Index. k-ring 0 is defined as the
+%% origin index, k-ring 1 is defined as k-ring 0 and all neighboring
+%% indices, and so on. Output is returned in no particular order.
+-spec k_ring_distances(Index::h3index(), K::non_neg_integer()) ->
+                              [{h3index(), non_neg_integer()},...].
+k_ring_distances(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns the maximum number of indices that result from the
+%% k-ring algorithm with the given K.
+-spec max_k_ring_size(K::non_neg_integer()) -> non_neg_integer().
 max_k_ring_size(_) ->
     not_loaded(?LINE).
 

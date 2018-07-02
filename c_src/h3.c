@@ -62,6 +62,12 @@ make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
                             enif_make_double(env, coord->lon));
 }
 
+static bool
+get_k(ErlNifEnv * env, ERL_NIF_TERM term, int * dest)
+{
+    return enif_get_int(env, term, dest) && *dest >= 0;
+}
+
 
 static ERL_NIF_TERM
 erl_num_hexagons(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
@@ -374,18 +380,12 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int k;
-    if (!enif_get_int(env, argv[1], &k))
+    if (!get_k(env, argv[1], &k))
     {
         return enif_make_badarg(env);
     }
-    if (k < 0)
-    {
-        // invalid k
-        return enif_make_badarg(env);
-    }
 
-    int kringsize = maxKringSize(k);
-
+    int        kringsize = maxKringSize(k);
     uint64_t * h3indices = calloc(kringsize, sizeof(uint64_t));
 
     if (h3indices == NULL)
@@ -407,9 +407,62 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                                        list);
         }
     }
+
     free(h3indices);
     return list;
 }
+
+static ERL_NIF_TERM
+erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!get_h3idx(env, argv[0], &h3idx))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int k;
+    if (!get_k(env, argv[1], &k))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int        kringsize = maxKringSize(k);
+    uint64_t * h3indices = calloc(kringsize, sizeof(uint64_t));
+
+    if (h3indices == NULL)
+    {
+        return enif_make_badarg(env);
+    }
+
+    int * h3distances = calloc(kringsize, sizeof(int));
+
+    if (h3distances == NULL)
+    {
+        free(h3indices);
+        return enif_make_badarg(env);
+    }
+
+    kRingDistances(h3idx, k, h3indices, h3distances);
+
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    // Output is placed in the provided array in no particular order. Elements
+    // of the output array may be left zero, as can happen when crossing a pentagon.
+    for (int i = kringsize - 1; i >= 0; i--)
+    {
+        if (h3indices[i] != 0)
+        {
+            ERL_NIF_TERM entry = enif_make_tuple2(env, enif_make_uint64(env, h3indices[i]),
+                                                  enif_make_int(env, h3distances[i]));
+            list = enif_make_list_cell(env, entry, list);
+        }
+    }
+
+    free(h3indices);
+    free(h3distances);
+    return list;
+}
+
 
 static ERL_NIF_TERM
 erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
@@ -464,6 +517,7 @@ static ErlNifFunc nif_funcs[] =
      {"parent", 2, erl_parent, 0},
      {"children", 2, erl_children, 0},
      {"k_ring", 2, erl_k_ring, 0},
+     {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0}};
 
