@@ -35,6 +35,33 @@ get_resolution(ErlNifEnv * env, ERL_NIF_TERM term, int * dest)
     return enif_get_int(env, term, dest) && *dest >= 0 && *dest <= 15;
 }
 
+static bool
+get_geo_coord(ErlNifEnv * env, ERL_NIF_TERM term, GeoCoord * dest)
+{
+    const ERL_NIF_TERM * geo;
+    int                  arity;
+    if (!enif_is_tuple(env, term) || !enif_get_tuple(env, term, &arity, &geo)
+        || arity != 2)
+    {
+        return false;
+    }
+    if (!enif_get_double(env, geo[0], &dest->lat)
+        || !enif_get_double(env, geo[1], &dest->lon))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static ERL_NIF_TERM
+make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
+{
+    return enif_make_tuple2(env,
+                            enif_make_double(env, coord->lat),
+                            enif_make_double(env, coord->lon));
+}
+
 
 static ERL_NIF_TERM
 erl_num_hexagons(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
@@ -91,13 +118,13 @@ erl_degs_to_rads(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_rads_to_degs(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    double res;
-    if (!enif_get_double(env, argv[0], &res))
+    double radians;
+    if (!enif_get_double(env, argv[0], &radians))
     {
         return enif_make_badarg(env);
     }
 
-    double result = radsToDegs(res);
+    double result = radsToDegs(radians);
     return enif_make_double(env, result);
 }
 
@@ -105,7 +132,7 @@ static ERL_NIF_TERM
 erl_hex_area_km2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
-    if (!enif_get_int(env, argv[0], &res))
+    if (!get_resolution(env, argv[0], &res))
     {
         return enif_make_badarg(env);
     }
@@ -118,7 +145,7 @@ static ERL_NIF_TERM
 erl_hex_area_m2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
-    if (!enif_get_int(env, argv[0], &res))
+    if (!get_resolution(env, argv[0], &res))
     {
         return enif_make_badarg(env);
     }
@@ -130,16 +157,8 @@ erl_hex_area_m2(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_geo_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    const ERL_NIF_TERM * geo;
-    int                  arity;
-    if (!enif_is_tuple(env, argv[0])
-        || !enif_get_tuple(env, argv[0], &arity, &geo) || arity != 2)
-    {
-        return enif_make_badarg(env);
-    }
     GeoCoord coord;
-    if (!enif_get_double(env, geo[0], &coord.lat)
-        || !enif_get_double(env, geo[1], &coord.lon))
+    if (!get_geo_coord(env, argv[0], &coord))
     {
         return enif_make_badarg(env);
     }
@@ -164,9 +183,7 @@ erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     GeoCoord coord;
     h3ToGeo(h3idx, &coord);
-    return enif_make_tuple2(env,
-                            enif_make_double(env, coord.lat),
-                            enif_make_double(env, coord.lon));
+    return make_geo_coord(env, &coord);
 }
 
 static ERL_NIF_TERM
