@@ -76,30 +76,37 @@ to_geo(_) ->
 to_geo_boundary(_) ->
     not_loaded(?LINE).
 
+%% @doc Converts the given index to its string representation.
 -spec to_string(h3index()) -> string().
 to_string(_) ->
     not_loaded(?LINE).
 
+%% @doc Converts the string representation to an index.
 -spec from_string(string()) -> h3index().
 from_string(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns the resolution of the index.
 -spec get_resolution(h3index()) -> resolution().
 get_resolution(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns the base cell number of the index.
 -spec get_base_cell(h3index()) -> h3index().
 get_base_cell(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns whethr the given index is valid.
 -spec is_valid(h3index()) -> boolean().
 is_valid(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns whether the given index has a resolution with Class III orientation.
 -spec is_class3(h3index()) -> boolean().
 is_class3(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns whether the given index represents a pentagonal cell.
 -spec is_pentagon(h3index()) -> boolean().
 is_pentagon(_) ->
     not_loaded(?LINE).
