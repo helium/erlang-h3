@@ -13,6 +13,7 @@
          max_k_ring_size_test/1,
          geo_to_h3_test/1,
          h3_to_geo_test/1,
+         h3_to_geo_boundary_test/1,
          hex_area_km2_decreasing_test/1,
          self_not_a_neighbor_test/1,
          h3_of_geo_coord_test/1
@@ -69,6 +70,19 @@ h3_to_geo_test(_Config) ->
     ct:pal("Lat: ~p, Long: ~p", [h3:rads_to_degs(Lat), h3:rads_to_degs(Long)]),
     22.320484717937624 = h3:rads_to_degs(Lat),
     169.72002399032806 = h3:rads_to_degs(Long).
+
+h3_to_geo_boundary_test(_Config) ->
+    Paris = h3:from_geo({h3:degs_to_rads(48.8566), h3:degs_to_rads(2.3522)}, 9),
+    Boundary = h3:to_geo_boundary(Paris),
+    [
+     {48.858845065, 2.352656618},
+     {48.857874118, 2.350662810},
+     {48.856107090, 2.350996343},
+     {48.855311035, 2.353323544},
+     {48.856281965, 2.355317257},
+     {48.858048967, 2.354983864}
+    ] = Boundary,
+    ok.
 
 hex_area_km2_decreasing_test(Config) ->
     Resolutions = proplists:get_value(resolutions, Config),

@@ -187,6 +187,27 @@ erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static ERL_NIF_TERM
+erl_h3_to_geo_boundary(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    uint64_t h3idx;
+    if (!get_h3idx(env, argv[0], &h3idx))
+    {
+        return enif_make_badarg(env);
+    }
+
+    GeoBoundary boundary;
+    h3ToGeoBoundary(h3idx, &boundary);
+
+    ERL_NIF_TERM verts[MAX_CELL_BNDRY_VERTS];
+    for (int i = 0; i < boundary.numVerts; i++)
+    {
+        verts[i] = make_geo_coord(env, &boundary.verts[i]);
+    }
+
+    return enif_make_list_from_array(env, verts, boundary.numVerts);
+}
+
+static ERL_NIF_TERM
 erl_h3_to_string(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
@@ -432,6 +453,7 @@ static ErlNifFunc nif_funcs[] =
      {"hex_area_m2", 1, erl_hex_area_m2, 0},
      {"from_geo", 2, erl_geo_to_h3, 0},
      {"to_geo", 1, erl_h3_to_geo, 0},
+     {"to_geo_boundary", 1, erl_h3_to_geo_boundary, 0},
      {"to_string", 1, erl_h3_to_string, 0},
      {"from_string", 1, erl_string_to_h3, 0},
      {"get_resolution", 1, erl_get_resolution, 0},

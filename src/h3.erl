@@ -9,6 +9,7 @@
          hex_area_km2/1,
          from_geo/2,
          to_geo/1,
+         to_geo_boundary/1,
          to_string/1,
          from_string/1,
          get_resolution/1,
@@ -60,12 +61,19 @@ hex_area_m2(_) ->
 hex_area_km2(_) ->
     not_loaded(?LINE).
 
+%% @doc Indexes the location at the specified resolution.
 -spec from_geo(coord(), resolution()) -> h3index().
 from_geo(_, _) ->
     not_loaded(?LINE).
 
+%% @doc Finds the centroid of the index.
 -spec to_geo(h3index()) -> coord().
 to_geo(_) ->
+    not_loaded(?LINE).
+
+%% @doc Finds the geo boundary of the given index.
+-spec to_geo_boundary(h3index()) -> [coord()].
+to_geo_boundary(_) ->
     not_loaded(?LINE).
 
 -spec to_string(h3index()) -> string().
