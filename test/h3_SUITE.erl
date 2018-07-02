@@ -16,7 +16,8 @@
          h3_to_geo_boundary_test/1,
          hex_area_km2_decreasing_test/1,
          self_not_a_neighbor_test/1,
-         h3_of_geo_coord_test/1
+         h3_of_geo_coord_test/1,
+         k_ring_origin_index_test/1
         ]).
 
 all() ->
@@ -31,7 +32,8 @@ all() ->
      h3_to_geo_test,
      hex_area_km2_decreasing_test,
      self_not_a_neighbor_test,
-     h3_of_geo_coord_test
+     h3_of_geo_coord_test,
+     k_ring_origin_index_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -99,3 +101,9 @@ self_not_a_neighbor_test(_Config) ->
 h3_of_geo_coord_test(_Config) ->
     Paris = h3:from_geo({h3:degs_to_rads(48.8566), h3:degs_to_rads(2.3522)}, 9),
     "891fb466257ffff" = h3:to_string(Paris).
+
+k_ring_origin_index_test(_Config) ->
+    H3Index = h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7),
+    [OriginIndex] = h3:k_ring(h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7), 0),
+    H3Index = OriginIndex,
+    ok.
