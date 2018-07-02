@@ -112,11 +112,13 @@ is_class3(_) ->
 is_pentagon(_) ->
     not_loaded(?LINE).
 
--spec parent(h3index(), resolution()) -> h3index().
+%% @doc Returns the parent (coarser) index containing the given Index.
+-spec parent(Index::h3index(), ParentRes::resolution()) -> h3index().
 parent(_, _) ->
     not_loaded(?LINE).
 
--spec children(h3index(), resolution()) -> [h3index(),...].
+%% @doc Returns the children container by the given Index at the given child resolution ChildRes.
+-spec children(Index::h3index(), ChildRes::resolution()) -> [h3index(),...].
 children(_, _) ->
     not_loaded(?LINE).
 
