@@ -1,0 +1,29 @@
+AlignAfterOpenBracket: Align # If true, horizontally aligns arguments after an open bracket.
+AlignConsecutiveAssignments: true #  This will align the assignment operators of consecutive lines
+AlignConsecutiveDeclarations: true # This will align the declaration names of consecutive lines
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: TopLevel
+AlwaysBreakTemplateDeclarations: true #  If true, always break after the template<...> of a template declaration
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Allman
+BreakConstructorInitializersBeforeComma: true # Always break constructor initializers before commas and align the commas with the colon.
+ColumnLimit: 80
+ExperimentalAutoDetectBinPacking: false
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 4
+PenaltyBreakBeforeFirstCallParameter: 200
+PenaltyExcessCharacter: 10
+PointerAlignment: Middle
+ReflowComments: true
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
