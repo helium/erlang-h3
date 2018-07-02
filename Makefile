@@ -8,9 +8,8 @@ compile:
 clean:
 	$(REBAR) clean
 
-test: compile
+test:
 	$(REBAR) as test do eunit, ct
 
 typecheck:
 	$(REBAR) dialyzer
-

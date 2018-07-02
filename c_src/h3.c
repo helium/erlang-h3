@@ -19,30 +19,29 @@
 #include <stdbool.h>
 #include <string.h>
 
-static ERL_NIF_TERM
-mk_atom(ErlNifEnv * env, const char * atom)
+static ERL_NIF_TERM ATOM_TRUE;
+static ERL_NIF_TERM ATOM_FALSE;
+
+
+static bool
+get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, uint64_t * dest)
 {
-    ERL_NIF_TERM ret;
-
-    if (!enif_make_existing_atom(env, atom, &ret, ERL_NIF_LATIN1))
-    {
-        return enif_make_atom(env, atom);
-    }
-
-    return ret;
+    return enif_get_uint64(env, term, (unsigned long *)dest) && h3IsValid(*dest);
 }
+
+static bool
+get_resolution(ErlNifEnv * env, ERL_NIF_TERM term, int * dest)
+{
+    return enif_get_int(env, term, dest) && *dest >= 0 && *dest <= 15;
+}
+
 
 static ERL_NIF_TERM
 erl_num_hexagons(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
-    if (!enif_get_int(env, argv[0], &res))
+    if (!get_resolution(env, argv[0], &res))
     {
-        return enif_make_badarg(env);
-    }
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
         return enif_make_badarg(env);
     }
 
@@ -54,13 +53,8 @@ static ERL_NIF_TERM
 erl_edge_length_meters(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
-    if (!enif_get_int(env, argv[0], &res))
+    if (!get_resolution(env, argv[0], &res))
     {
-        return enif_make_badarg(env);
-    }
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
         return enif_make_badarg(env);
     }
 
@@ -72,13 +66,8 @@ static ERL_NIF_TERM
 erl_edge_length_kilometers(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int res;
-    if (!enif_get_int(env, argv[0], &res))
+    if (!get_resolution(env, argv[0], &res))
     {
-        return enif_make_badarg(env);
-    }
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
         return enif_make_badarg(env);
     }
 
@@ -148,27 +137,18 @@ erl_geo_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         return enif_make_badarg(env);
     }
-    double lat, lon;
-    if (!enif_get_double(env, geo[0], &lat)
-        || !enif_get_double(env, geo[1], &lon))
+    GeoCoord coord;
+    if (!enif_get_double(env, geo[0], &coord.lat)
+        || !enif_get_double(env, geo[1], &coord.lon))
     {
         return enif_make_badarg(env);
     }
     int res;
-    if (!enif_get_int(env, argv[1], &res))
+    if (!get_resolution(env, argv[1], &res))
     {
         return enif_make_badarg(env);
     }
 
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
-        return enif_make_badarg(env);
-    }
-
-    GeoCoord coord;
-    coord.lat       = lat;
-    coord.lon       = lon;
     uint64_t result = geoToH3(&coord, res);
     return enif_make_uint64(env, result);
 }
@@ -177,12 +157,7 @@ static ERL_NIF_TERM
 erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
@@ -198,15 +173,11 @@ static ERL_NIF_TERM
 erl_h3_to_string(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
-    if (h3IsValid(h3idx) == 0)
-    {
-        return enif_make_badarg(env);
-    }
     char out[17];
     h3ToString(h3idx, out, 17);
     return enif_make_string(env, out, ERL_NIF_LATIN1);
@@ -223,7 +194,7 @@ erl_string_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     uint64_t h3idx = stringToH3(in);
 
-    if (h3IsValid(h3idx) == 0)
+    if (!h3IsValid(h3idx))
     {
         return enif_make_badarg(env);
     }
@@ -234,12 +205,7 @@ static ERL_NIF_TERM
 erl_get_resolution(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
@@ -253,12 +219,7 @@ static ERL_NIF_TERM
 erl_get_base_cell(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
@@ -271,17 +232,7 @@ static ERL_NIF_TERM
 erl_is_valid(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
-    {
-        return mk_atom(env, "false");
-    }
-
-    return mk_atom(env, "true");
+    return get_h3idx(env, argv[0], &h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
 
 
@@ -289,22 +240,12 @@ static ERL_NIF_TERM
 erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
-    if (h3IsValid(h3idx) == 0)
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsResClassIII(h3idx) == 0)
-    {
-        return mk_atom(env, "false");
-    }
-
-    return mk_atom(env, "true");
+    return h3IsResClassIII(h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
 
 
@@ -312,46 +253,26 @@ static ERL_NIF_TERM
 erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
-    if (h3IsValid(h3idx) == 0)
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsPentagon(h3idx) == 0)
-    {
-        return mk_atom(env, "false");
-    }
-
-    return mk_atom(env, "true");
+    return h3IsPentagon(h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
 
 static ERL_NIF_TERM
 erl_parent(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
     int res;
-    if (!enif_get_int(env, argv[1], &res))
+    if (!get_resolution(env, argv[1], &res))
     {
-        return enif_make_badarg(env);
-    }
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
         return enif_make_badarg(env);
     }
 
@@ -368,24 +289,14 @@ static ERL_NIF_TERM
 erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
     int res;
-    if (!enif_get_int(env, argv[1], &res))
+    if (!get_resolution(env, argv[1], &res))
     {
-        return enif_make_badarg(env);
-    }
-    if (res < 0 || res > 15)
-    {
-        // invalid resolution
         return enif_make_badarg(env);
     }
 
@@ -419,12 +330,7 @@ static ERL_NIF_TERM
 erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx;
-    if (!enif_get_uint64(env, argv[0], &h3idx))
-    {
-        return enif_make_badarg(env);
-    }
-
-    if (h3IsValid(h3idx) == 0)
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
@@ -484,23 +390,19 @@ static ERL_NIF_TERM
 erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     uint64_t h3idx_origin;
-    if (!enif_get_uint64(env, argv[0], &h3idx_origin))
+    if (!get_h3idx(env, argv[0], &h3idx_origin))
     {
         return enif_make_badarg(env);
     }
 
     uint64_t h3idx_destination;
-    if (!enif_get_uint64(env, argv[1], &h3idx_destination))
+    if (!get_h3idx(env, argv[1], &h3idx_destination))
     {
         return enif_make_badarg(env);
     }
 
-    if (h3IndexesAreNeighbors(h3idx_origin, h3idx_destination) == 0)
-    {
-        return mk_atom(env, "false");
-    }
-
-    return mk_atom(env, "true");
+    return h3IndexesAreNeighbors(h3idx_origin, h3idx_destination) ? ATOM_TRUE
+                                                                  : ATOM_FALSE;
 }
 
 static ErlNifFunc nif_funcs[] =
@@ -526,11 +428,20 @@ static ErlNifFunc nif_funcs[] =
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0}};
 
+#define ATOM(Id, Value)                                                        \
+    {                                                                          \
+        Id = enif_make_atom(env, Value);                                       \
+    }
+
 static int
 load(ErlNifEnv * env, void ** priv_data, ERL_NIF_TERM load_info)
 {
     (void)priv_data;
     (void)load_info;
+
+    ATOM(ATOM_TRUE, "true");
+    ATOM(ATOM_FALSE, "false");
+
     return 0;
 }
 
