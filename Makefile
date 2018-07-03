@@ -13,3 +13,6 @@ test:
 
 typecheck:
 	$(REBAR) dialyzer
+
+doc:
+	$(REBAR) edoc

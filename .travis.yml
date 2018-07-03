@@ -10,4 +10,4 @@ cache:
   directories:
   - $HOME/.cache/rebar3
 
-script: ./rebar3 as test do ct, coveralls send, dialyzer
+script: ./rebar3 as test do ct, dialyzer

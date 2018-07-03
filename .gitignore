@@ -10,5 +10,6 @@ rel/example_project
 .rebar
 priv
 c_src/h3/
+doc/
 _build
 *.swp
