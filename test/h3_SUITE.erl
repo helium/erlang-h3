@@ -38,7 +38,8 @@ all() ->
      h3_of_geo_coord_test,
      k_ring_origin_index_test,
      k_ring_distance_origin_test,
-     k_ring_distance_test
+     k_ring_distance_test,
+     compact_roundtrip_test
     ].
 
 init_per_testcase(_, Config) ->

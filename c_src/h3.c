@@ -550,7 +550,7 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
 
-    if (!compact(in_indices, out_indices, len))
+    if (compact(in_indices, out_indices, len) != 0)
     {
         free(in_indices);
         free(out_indices);
@@ -600,7 +600,7 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    if (!uncompact(in_indices, in_len, out_indices, out_len, res))
+    if (uncompact(in_indices, in_len, out_indices, out_len, res) != 0)
     {
         free(in_indices);
         free(out_indices);
