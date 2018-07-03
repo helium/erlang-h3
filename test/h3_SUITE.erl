@@ -45,9 +45,12 @@ init_per_testcase(_, Config) ->
     Resolutions = lists:seq(0, 15),
     ParisIndex = h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7),
     SunnyvaleIndex = h3:from_string("89283470c27ffff"),
+    %% XXX: make this go to a 1000 and feel that RAM burn
+    KList = lists:seq(1, 100),
     [{resolutions, Resolutions},
      {paris_index, ParisIndex},
-     {sunnyvale_index, SunnyvaleIndex}
+     {sunnyvale_index, SunnyvaleIndex},
+     {k_list, KList}
      | Config].
 
 end_per_testcase(_, _Config) ->
@@ -135,12 +138,24 @@ k_ring_distance_origin_test(Config) ->
     ok.
 
 k_ring_distance_test(Config) ->
+    %% TODO: check specific known values possibly
     ParisIndex = proplists:get_value(paris_index, Config),
-    K = 1,
-    %% kring algorithm always returns 7 indices with k=1, in no particular order
-    %% 6 vertices of the hexagon and 1 being the origin index
-    7 = h3:max_k_ring_size(K),
-    7 = length(h3:k_ring_distances(ParisIndex, K)),
+    KList = proplists:get_value(k_list, Config),
+    KRingDistances = [{K, h3:k_ring_distances(ParisIndex, K)} || K <- KList],
+    lists:map(fun({K, KRingDistanceList}) ->
+                      %% all kringdistancelist must contain the origin index
+                      true = lists:member({ParisIndex, 0}, KRingDistanceList),
+                      %% their length must be equal to the max allowed at that k
+                      true = length(KRingDistanceList) == h3:max_k_ring_size(K),
+                      %% each k adds a "layer" of hexagons on top of the base
+                      %% so, at k=1, it is the origin index + 6 vertices
+                      %% at k=2, it's k*6 vertices + the ones from k=1 ...
+                      RingedHexagonsAtK = lists:filter(fun({_, CalcK}) ->
+                                                               K == CalcK
+                                                       end,
+                                                       lists:delete({ParisIndex, 0}, KRingDistanceList)),
+                      true = K == length(RingedHexagonsAtK) div 6
+              end, KRingDistances),
     ok.
 
 compact_roundtrip_test(Config) ->
