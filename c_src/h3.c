@@ -24,9 +24,15 @@ static ERL_NIF_TERM ATOM_FALSE;
 
 
 static bool
-get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, uint64_t * dest)
+get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest)
 {
     return enif_get_uint64(env, term, (unsigned long *)dest) && h3IsValid(*dest);
+}
+
+static ERL_NIF_TERM
+make_h3idx(ErlNifEnv * env, H3Index index)
+{
+    return enif_make_uint64(env, index);
 }
 
 static bool
@@ -174,14 +180,14 @@ erl_geo_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    uint64_t result = geoToH3(&coord, res);
-    return enif_make_uint64(env, result);
+    H3Index result = geoToH3(&coord, res);
+    return make_h3idx(env, result);
 }
 
 static ERL_NIF_TERM
 erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -195,7 +201,7 @@ erl_h3_to_geo(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_h3_to_geo_boundary(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -216,7 +222,7 @@ erl_h3_to_geo_boundary(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_h3_to_string(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -236,19 +242,19 @@ erl_string_to_h3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    uint64_t h3idx = stringToH3(in);
+    H3Index h3idx = stringToH3(in);
 
     if (!h3IsValid(h3idx))
     {
         return enif_make_badarg(env);
     }
-    return enif_make_uint64(env, h3idx);
+    return make_h3idx(env, h3idx);
 }
 
 static ERL_NIF_TERM
 erl_get_resolution(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -262,7 +268,7 @@ erl_get_resolution(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_get_base_cell(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -275,7 +281,7 @@ erl_get_base_cell(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_is_valid(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     return get_h3idx(env, argv[0], &h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
 
@@ -283,7 +289,7 @@ erl_is_valid(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -296,7 +302,7 @@ erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -308,7 +314,7 @@ erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_parent(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -326,13 +332,13 @@ erl_parent(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    return enif_make_uint64(env, h3ToParent(h3idx, res));
+    return make_h3idx(env, h3ToParent(h3idx, res));
 }
 
 static ERL_NIF_TERM
 erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -352,7 +358,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     int childcount = maxH3ToChildrenSize(h3idx, res);
 
-    uint64_t * children = calloc(childcount, sizeof(uint64_t));
+    H3Index * children = calloc(childcount, sizeof(H3Index));
 
     if (children == NULL)
     {
@@ -364,7 +370,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = enif_make_list(env, 0);
     for (int i = childcount - 1; i >= 0; i--)
     {
-        list = enif_make_list_cell(env, enif_make_uint64(env, children[i]), list);
+        list = enif_make_list_cell(env, make_h3idx(env, children[i]), list);
     }
     free(children);
     return list;
@@ -373,7 +379,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -385,8 +391,8 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    int        kringsize = maxKringSize(k);
-    uint64_t * h3indices = calloc(kringsize, sizeof(uint64_t));
+    int       kringsize = maxKringSize(k);
+    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
@@ -402,9 +408,7 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         if (h3indices[i] != 0)
         {
-            list = enif_make_list_cell(env,
-                                       enif_make_uint64(env, h3indices[i]),
-                                       list);
+            list = enif_make_list_cell(env, make_h3idx(env, h3indices[i]), list);
         }
     }
 
@@ -415,7 +419,7 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx;
+    H3Index h3idx;
     if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
@@ -427,8 +431,8 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    int        kringsize = maxKringSize(k);
-    uint64_t * h3indices = calloc(kringsize, sizeof(uint64_t));
+    int       kringsize = maxKringSize(k);
+    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
@@ -454,7 +458,7 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         {
             ERL_NIF_TERM entry =
                 enif_make_tuple2(env,
-                                 enif_make_uint64(env, h3indices[i]),
+                                 make_h3idx(env, h3indices[i]),
                                  enif_make_int(env, h3distances[i]));
             list = enif_make_list_cell(env, entry, list);
         }
@@ -480,7 +484,7 @@ erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static bool
-get_h3indexes(ErlNifEnv * env, ERL_NIF_TERM term, uint64_t * dest, unsigned dest_len)
+get_h3indexes(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest, unsigned dest_len)
 {
     unsigned len;
     if (!enif_get_list_length(env, term, &len) || len > dest_len)
@@ -502,14 +506,14 @@ get_h3indexes(ErlNifEnv * env, ERL_NIF_TERM term, uint64_t * dest, unsigned dest
 }
 
 static ERL_NIF_TERM
-make_h3indexes(ErlNifEnv * env, uint64_t * src, unsigned src_len)
+make_h3indexes(ErlNifEnv * env, H3Index * src, unsigned src_len)
 {
     ERL_NIF_TERM list = enif_make_list(env, 0);
     for (int i = 0; i < src_len; i++)
     {
         if (src[i] != 0)
         {
-            ERL_NIF_TERM entry = enif_make_uint64(env, src[i]);
+            ERL_NIF_TERM entry = make_h3idx(env, src[i]);
             list               = enif_make_list_cell(env, entry, list);
         }
     }
@@ -526,7 +530,7 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    uint64_t * in_indices = calloc(len, sizeof(uint64_t));
+    H3Index * in_indices = calloc(len, sizeof(H3Index));
     if (in_indices == NULL)
     {
         return enif_make_badarg(env);
@@ -538,7 +542,7 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    uint64_t * out_indices = calloc(len, sizeof(uint64_t));
+    H3Index * out_indices = calloc(len, sizeof(H3Index));
     if (out_indices == NULL)
     {
         free(in_indices);
@@ -577,7 +581,7 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    uint64_t * in_indices = calloc(in_len, sizeof(uint64_t));
+    H3Index * in_indices = calloc(in_len, sizeof(H3Index));
     if (in_indices == NULL)
     {
         return enif_make_badarg(env);
@@ -589,8 +593,8 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    unsigned   out_len     = maxUncompactSize(in_indices, in_len, res);
-    uint64_t * out_indices = calloc(out_len, sizeof(uint64_t));
+    unsigned  out_len     = maxUncompactSize(in_indices, in_len, res);
+    H3Index * out_indices = calloc(out_len, sizeof(H3Index));
     if (out_indices == NULL)
     {
         return enif_make_badarg(env);
@@ -616,13 +620,13 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    uint64_t h3idx_origin;
+    H3Index h3idx_origin;
     if (!get_h3idx(env, argv[0], &h3idx_origin))
     {
         return enif_make_badarg(env);
     }
 
-    uint64_t h3idx_destination;
+    H3Index h3idx_destination;
     if (!get_h3idx(env, argv[1], &h3idx_destination))
     {
         return enif_make_badarg(env);
