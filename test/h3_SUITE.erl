@@ -19,7 +19,8 @@
          h3_of_geo_coord_test/1,
          k_ring_origin_index_test/1,
          k_ring_distance_origin_test/1,
-         k_ring_distance_test/1
+         k_ring_distance_test/1,
+         compact_roundtrip_test/1
         ]).
 
 all() ->
@@ -43,7 +44,11 @@ all() ->
 init_per_testcase(_, Config) ->
     Resolutions = lists:seq(0, 15),
     ParisIndex = h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7),
-    [{resolutions, Resolutions}, {paris_index, ParisIndex} | Config].
+    SunnyvaleIndex = h3:from_string("89283470c27ffff"),
+    [{resolutions, Resolutions},
+     {paris_index, ParisIndex},
+     {sunnyvale_index, SunnyvaleIndex}
+     | Config].
 
 end_per_testcase(_, _Config) ->
     ok.
@@ -136,4 +141,18 @@ k_ring_distance_test(Config) ->
     %% 6 vertices of the hexagon and 1 being the origin index
     7 = h3:max_k_ring_size(K),
     7 = length(h3:k_ring_distances(ParisIndex, K)),
+    ok.
+
+compact_roundtrip_test(Config) ->
+    SunnyvaleIndex = proplists:get_value(sunnyvale_index, Config),
+    ExpandedSize = h3:max_k_ring_size(9),
+    Expanded = h3:k_ring(SunnyvaleIndex, 9),
+    ExpandedSize = length(Expanded),
+
+    Compressed = h3:compact(Expanded),
+    73 = length(Compressed),
+
+    Decompressed = h3:uncompact(Compressed, 9),
+    ExpandedSize = length(Decompressed),
+
     ok.

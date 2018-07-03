@@ -452,8 +452,10 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         if (h3indices[i] != 0)
         {
-            ERL_NIF_TERM entry = enif_make_tuple2(env, enif_make_uint64(env, h3indices[i]),
-                                                  enif_make_int(env, h3distances[i]));
+            ERL_NIF_TERM entry =
+                enif_make_tuple2(env,
+                                 enif_make_uint64(env, h3indices[i]),
+                                 enif_make_int(env, h3distances[i]));
             list = enif_make_list_cell(env, entry, list);
         }
     }
@@ -476,6 +478,140 @@ erl_max_k_ring_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     int result = maxKringSize(k);
     return enif_make_int(env, result);
 }
+
+static bool
+get_h3indexes(ErlNifEnv * env, ERL_NIF_TERM term, uint64_t * dest, unsigned dest_len)
+{
+    unsigned len;
+    if (!enif_get_list_length(env, term, &len) || len > dest_len)
+    {
+        return false;
+    }
+
+    ERL_NIF_TERM head;
+    while (enif_get_list_cell(env, term, &head, &term))
+    {
+        if (!get_h3idx(env, head, dest))
+        {
+            return false;
+        }
+        dest += 1;
+    }
+
+    return true;
+}
+
+static ERL_NIF_TERM
+make_h3indexes(ErlNifEnv * env, uint64_t * src, unsigned src_len)
+{
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    for (int i = 0; i < src_len; i++)
+    {
+        if (src[i] != 0)
+        {
+            ERL_NIF_TERM entry = enif_make_uint64(env, src[i]);
+            list               = enif_make_list_cell(env, entry, list);
+        }
+    }
+
+    return list;
+}
+
+static ERL_NIF_TERM
+erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    unsigned len;
+    if (!enif_get_list_length(env, argv[0], &len))
+    {
+        return enif_make_badarg(env);
+    }
+
+    uint64_t * in_indices = calloc(len, sizeof(uint64_t));
+    if (in_indices == NULL)
+    {
+        return enif_make_badarg(env);
+    }
+
+    if (!get_h3indexes(env, argv[0], in_indices, len))
+    {
+        free(in_indices);
+        return enif_make_badarg(env);
+    }
+
+    uint64_t * out_indices = calloc(len, sizeof(uint64_t));
+    if (out_indices == NULL)
+    {
+        free(in_indices);
+        return enif_make_badarg(env);
+    }
+
+
+    if (!compact(in_indices, out_indices, len))
+    {
+        free(in_indices);
+        free(out_indices);
+        return enif_make_badarg(env);
+    }
+
+    // Done with in_indices
+    free(in_indices);
+
+    ERL_NIF_TERM list = make_h3indexes(env, out_indices, len);
+
+    free(out_indices);
+    return list;
+}
+
+static ERL_NIF_TERM
+erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    unsigned in_len;
+    if (!enif_get_list_length(env, argv[0], &in_len))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int res;
+    if (!get_resolution(env, argv[1], &res))
+    {
+        return enif_make_badarg(env);
+    }
+
+    uint64_t * in_indices = calloc(in_len, sizeof(uint64_t));
+    if (in_indices == NULL)
+    {
+        return enif_make_badarg(env);
+    }
+
+    if (!get_h3indexes(env, argv[0], in_indices, in_len))
+    {
+        free(in_indices);
+        return enif_make_badarg(env);
+    }
+
+    unsigned   out_len     = maxUncompactSize(in_indices, in_len, res);
+    uint64_t * out_indices = calloc(out_len, sizeof(uint64_t));
+    if (out_indices == NULL)
+    {
+        return enif_make_badarg(env);
+    }
+
+    if (!uncompact(in_indices, in_len, out_indices, out_len, res))
+    {
+        free(in_indices);
+        free(out_indices);
+        return enif_make_badarg(env);
+    }
+
+    // Done with in_indices
+    free(in_indices);
+
+    ERL_NIF_TERM list = make_h3indexes(env, out_indices, out_len);
+
+    free(out_indices);
+    return list;
+}
+
 
 static ERL_NIF_TERM
 erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
@@ -516,6 +652,8 @@ static ErlNifFunc nif_funcs[] =
      {"is_pentagon", 1, erl_is_pentagon, 0},
      {"parent", 2, erl_parent, 0},
      {"children", 2, erl_children, 0},
+     {"compact", 1, erl_compact, 0},
+     {"uncompact", 2, erl_uncompact, 0},
      {"k_ring", 2, erl_k_ring, 0},
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},

@@ -22,6 +22,8 @@
          k_ring/2,
          k_ring_distances/2,
          max_k_ring_size/1,
+         compact/1,
+         uncompact/2,
          indices_are_neighbors/2
         ]).
 
@@ -143,6 +145,18 @@ k_ring_distances(_, _) ->
 %% k-ring algorithm with the given K.
 -spec max_k_ring_size(K::non_neg_integer()) -> non_neg_integer().
 max_k_ring_size(_) ->
+    not_loaded(?LINE).
+
+%% @doc Compacts the given list of indexes as best as
+%% possible. Returns a list of at most the same length as the input
+%% list.
+-spec compact([h3index(),...]) -> [h3index(),...].
+compact(_) ->
+    not_loaded(?LINE).
+
+%% @doc Uncompacts given list of indexes to the given resolution.
+-spec uncompact([h3index(),...], resolution()) -> [h3index(),...].
+uncompact(_,_) ->
     not_loaded(?LINE).
 
 -spec indices_are_neighbors(h3index(), h3index()) -> boolean().
