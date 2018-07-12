@@ -3,8 +3,6 @@
 -export([num_hexagons/1,
          edge_length_meters/1,
          edge_length_kilometers/1,
-         degs_to_rads/1,
-         rads_to_degs/1,
          hex_area_m2/1,
          hex_area_km2/1,
          from_geo/2,
@@ -48,14 +46,6 @@ edge_length_meters(_) ->
 edge_length_kilometers(_) ->
     not_loaded(?LINE).
 
--spec degs_to_rads(float()) -> float().
-degs_to_rads(_) ->
-    not_loaded(?LINE).
-
--spec rads_to_degs(float()) -> float().
-rads_to_degs(_) ->
-    not_loaded(?LINE).
-
 -spec hex_area_m2(non_neg_integer()) -> float().
 hex_area_m2(_) ->
     not_loaded(?LINE).
@@ -64,17 +54,20 @@ hex_area_m2(_) ->
 hex_area_km2(_) ->
     not_loaded(?LINE).
 
-%% @doc Indexes the location at the specified resolution.
+%% @doc Indexes the location at the specified resolution. Takes the
+%% coordinate in degrees.
 -spec from_geo(coord(), resolution()) -> h3index().
 from_geo(_, _) ->
     not_loaded(?LINE).
 
-%% @doc Finds the centroid of the index.
+%% @doc Finds the centroid of the index. Returns the coordinate in
+%% degrees.
 -spec to_geo(h3index()) -> coord().
 to_geo(_) ->
     not_loaded(?LINE).
 
-%% @doc Finds the geo boundary of the given index.
+%% @doc Finds the geo boundary of the given index. The retuurned list
+%% of coordinates is in degrees.
 -spec to_geo_boundary(h3index()) -> [coord()].
 to_geo_boundary(_) ->
     not_loaded(?LINE).

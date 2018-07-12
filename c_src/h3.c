@@ -57,15 +57,22 @@ get_geo_coord(ErlNifEnv * env, ERL_NIF_TERM term, GeoCoord * dest)
         return false;
     }
 
+    dest->lat = degsToRads(dest->lat);
+    dest->lon = degsToRads(dest->lon);
+
     return true;
 }
 
 static ERL_NIF_TERM
 make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
 {
-    return enif_make_tuple2(env,
-                            enif_make_double(env, coord->lat),
-                            enif_make_double(env, coord->lon));
+    double lat = radsToDegs(coord->lat);
+    double lon = radsToDegs(coord->lon);
+
+    return enif_make_tuple2(
+        env,
+        enif_make_double(env, lat > 90 ? lat - 180 : lat),
+        enif_make_double(env, lon > 180 ? lon - 360 : lon));
 }
 
 static bool
@@ -111,32 +118,6 @@ erl_edge_length_kilometers(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     double result = edgeLengthKm(res);
-    return enif_make_double(env, result);
-}
-
-static ERL_NIF_TERM
-erl_degs_to_rads(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
-{
-    double res;
-    if (!enif_get_double(env, argv[0], &res))
-    {
-        return enif_make_badarg(env);
-    }
-
-    double result = degsToRads(res);
-    return enif_make_double(env, result);
-}
-
-static ERL_NIF_TERM
-erl_rads_to_degs(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
-{
-    double radians;
-    if (!enif_get_double(env, argv[0], &radians))
-    {
-        return enif_make_badarg(env);
-    }
-
-    double result = radsToDegs(radians);
     return enif_make_double(env, result);
 }
 
@@ -640,8 +621,6 @@ static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
      {"edge_length_kilometers", 1, erl_edge_length_kilometers, 0},
-     {"degs_to_rads", 1, erl_degs_to_rads, 0},
-     {"rads_to_degs", 1, erl_rads_to_degs, 0},
      {"hex_area_km2", 1, erl_hex_area_km2, 0},
      {"hex_area_m2", 1, erl_hex_area_m2, 0},
      {"from_geo", 2, erl_geo_to_h3, 0},

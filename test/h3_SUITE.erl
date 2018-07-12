@@ -5,14 +5,11 @@
 
 -export([all/0, init_per_testcase/2, end_per_testcase/2]).
 -export([
-         degs_to_rads_test/1,
-         rads_to_degs_test/1,
          validity_test/1,
-         d2r_r2d_roundtrip_test/1,
-         r2d_d2r_roundtrip_test/1,
          max_k_ring_size_test/1,
          geo_to_h3_test/1,
          h3_to_geo_test/1,
+         h3_to_geo_constrain_test/1,
          h3_to_geo_boundary_test/1,
          hex_area_km2_decreasing_test/1,
          self_not_a_neighbor_test/1,
@@ -25,14 +22,11 @@
 
 all() ->
     [
-     degs_to_rads_test,
-     rads_to_degs_test,
      validity_test,
-     d2r_r2d_roundtrip_test,
-     r2d_d2r_roundtrip_test,
      max_k_ring_size_test,
      geo_to_h3_test,
      h3_to_geo_test,
+     h3_to_geo_constrain_test,
      hex_area_km2_decreasing_test,
      self_not_a_neighbor_test,
      h3_of_geo_coord_test,
@@ -44,7 +38,7 @@ all() ->
 
 init_per_testcase(_, Config) ->
     Resolutions = lists:seq(0, 15),
-    ParisIndex = h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7),
+    ParisIndex = h3:from_geo({37.3615593, -122.0553238}, 7),
     SunnyvaleIndex = h3:from_string("89283470c27ffff"),
     %% XXX: make this go to a 1000 and feel that RAM burn
     KList = lists:seq(1, 100),
@@ -57,26 +51,10 @@ init_per_testcase(_, Config) ->
 end_per_testcase(_, _Config) ->
     ok.
 
-degs_to_rads_test(_Config) ->
-    0.017453292519943295 = h3:degs_to_rads(1.0),
-    ok.
-
-rads_to_degs_test(_Config) ->
-    57.29577951308232 = h3:rads_to_degs(1.0),
-    ok.
-
 validity_test(_Config) ->
     H3 = h3:from_string("845ad1bffffffff"),
     596072861467148287 = H3,
     true = h3:is_valid(H3),
-    ok.
-
-d2r_r2d_roundtrip_test(_Config) ->
-    40.7128 = h3:rads_to_degs(h3:degs_to_rads(40.7128)),
-    ok.
-
-r2d_d2r_roundtrip_test(_Config) ->
-    0.7105724077 = h3:degs_to_rads(h3:rads_to_degs(0.7105724077)),
     ok.
 
 max_k_ring_size_test(_Config) ->
@@ -84,19 +62,24 @@ max_k_ring_size_test(_Config) ->
     ok.
 
 geo_to_h3_test(_Config) ->
-    Res = h3:from_geo({h3:degs_to_rads(40.689167), h3:degs_to_rads(-74.044444)}, 5),
+    Res = h3:from_geo({40.689167, -74.044444}, 5),
     "852a1073fffffff" = h3:to_string(Res),
     ok.
 
 h3_to_geo_test(_Config) ->
-    {Lat, Long} = h3:to_geo(h3:from_string("845ad1bffffffff")),
-    ct:pal("Lat: ~p, Long: ~p", [h3:rads_to_degs(Lat), h3:rads_to_degs(Long)]),
-    22.320484717937624 = h3:rads_to_degs(Lat),
-    169.72002399032806 = h3:rads_to_degs(Long),
+    {Lat, Lon} = h3:to_geo(h3:from_string("845ad1bffffffff")),
+    ct:pal("Lat: ~p, Lon: ~p", [Lat, Lon]),
+    {22.320484717937624, 169.72002399032806} = {Lat, Lon},
+    ok.
+
+h3_to_geo_constrain_test(_Config) ->
+    {Lat, Lon} = h3:to_geo(h3:from_string("87283472bffffff")),
+    ct:pal("Lat: ~p, Lon: ~p", [Lat, Lon]),
+    {37.35171820183272, -122.05032565263943} = {Lat, Lon},
     ok.
 
 h3_to_geo_boundary_test(_Config) ->
-    Paris = h3:from_geo({h3:degs_to_rads(48.8566), h3:degs_to_rads(2.3522)}, 9),
+    Paris = h3:from_geo({48.8566, 2.3522}, 9),
     Boundary = h3:to_geo_boundary(Paris),
     [
      {48.858845065, 2.352656618},
@@ -122,13 +105,13 @@ self_not_a_neighbor_test(_Config) ->
     ok.
 
 h3_of_geo_coord_test(_Config) ->
-    Paris = h3:from_geo({h3:degs_to_rads(48.8566), h3:degs_to_rads(2.3522)}, 9),
+    Paris = h3:from_geo({48.8566, 2.3522}, 9),
     "891fb466257ffff" = h3:to_string(Paris),
     ok.
 
 k_ring_origin_index_test(Config) ->
     ParisIndex = proplists:get_value(paris_index, Config),
-    [OriginIndex] = h3:k_ring(h3:from_geo({h3:degs_to_rads(37.3615593), h3:degs_to_rads(-122.0553238)}, 7), 0),
+    [OriginIndex] = h3:k_ring(h3:from_geo({37.3615593, -122.0553238}, 7), 0),
     ParisIndex = OriginIndex,
     ok.
 
