@@ -1,4 +1,47 @@
 [![Build Status](https://travis-ci.org/helium/erlang-h3.svg?branch=master)](https://travis-ci.org/helium/erlang-h3)
 
 # erlang-h3
-Erlang binding for Uber's H3 spatial coordinate library
+
+The `erlang-h3` library provides an Erlang binding for [Uber's
+H3](https://uber.github.io/h3) spatial coordinate library.
+
+
+Install
+------
+
+Add `erlang-h3` to your `deps` section in `rebar.config`:
+
+``` shell
+{deps, [erlang-h3]}.
+```
+
+Building
+--------
+
+Fork the repo and simply use `make` to build the library.
+
+To run the tests run `make test`.
+
+
+Usage
+-----
+
+The `h3` module exports most of the functions from the core H3 library.
+
+Like the JavaScript version the Erlang binding uses degrees instead of
+radians when converting to and from geo-coordinates to h3 indexes.
+
+Example using `./rebar3 shell` after cloning the repo:
+
+```shell
+$ ./rebar3 shell
+...
+
+1> Paris = h3:from_geo({48.8566, 2.3522}, 9).
+617550903642685439
+2> h3:to_string(Paris).
+"891fb466257ffff"
+3> h3:to_geo(Paris).
+{48.857078058197295,2.3529900909549206}
+
+```
