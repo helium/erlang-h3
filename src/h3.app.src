@@ -1,15 +1,12 @@
-{application, h3,
- [{description, "An OTP library"},
-  {vsn, "0.1.0"},
-  {registered, []},
-  {applications,
-   [kernel,
-    stdlib
-   ]},
+{application,h3,
+ [{description,"An OTP library"},
+  {vsn,"git"},
+  {registered,[]},
+  {applications,[kernel,stdlib]},
   {env,[]},
-  {modules, []},
 
-  {maintainers, []},
+  %% hex.pm packaging:
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {maintainers, ["Helium"]},
+  {links, [{"Github", "https://github.com/helium/erlang-h3"}]}
  ]}.

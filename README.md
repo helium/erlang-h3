@@ -18,7 +18,8 @@ Add `erlang-h3` to your `deps` section in `rebar.config`:
 Building
 --------
 
-Fork the repo and simply use `make` to build the library.
+Fork the repo and simply use `make` to build the library. You will
+need `cmake` installed to build the required h3 core package.
 
 To run the tests run `make test`.
 
