@@ -22,6 +22,41 @@
 static ERL_NIF_TERM ATOM_TRUE;
 static ERL_NIF_TERM ATOM_FALSE;
 
+static void
+free_geo_fence(Geofence * gf)
+{
+    if (gf == NULL)
+    {
+        return;
+    }
+    if (gf->verts != NULL)
+    {
+        (void)enif_free((void *)gf->verts);
+        gf->verts = NULL;
+    }
+    gf->numVerts = 0;
+}
+
+static void
+free_geo_polygon(GeoPolygon * gp)
+{
+    int i;
+    if (gp == NULL)
+    {
+        return;
+    }
+    (void)free_geo_fence(&gp->geofence);
+    if (gp->holes != NULL)
+    {
+        for (i = 0; i < gp->numHoles; i++)
+        {
+            (void)free_geo_fence(&gp->holes[i]);
+        }
+        (void)enif_free(gp->holes);
+        gp->holes = NULL;
+    }
+    gp->numHoles = 0;
+}
 
 static bool
 get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest)
@@ -63,16 +98,87 @@ get_geo_coord(ErlNifEnv * env, ERL_NIF_TERM term, GeoCoord * dest)
     return true;
 }
 
+static bool
+get_geo_fence(ErlNifEnv * env, ERL_NIF_TERM term, Geofence * gf)
+{
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+    GeoCoord *   gc = NULL;
+    if (gf == NULL || !enif_get_list_length(env, term, (unsigned *)&gf->numVerts)
+        || gf->numVerts < 1)
+    {
+        return false;
+    }
+    gf->verts = (void *)enif_alloc(sizeof(GeoCoord) * gf->numVerts);
+    if (gf->verts == NULL)
+    {
+        return false;
+    }
+    gc   = gf->verts;
+    tail = term;
+    while (enif_get_list_cell(env, tail, &head, &tail) != 0)
+    {
+        if (!get_geo_coord(env, head, gc))
+        {
+            (void)free_geo_fence(gf);
+            return false;
+        }
+        gc++;
+    }
+    return true;
+}
+
+static bool
+get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
+{
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+    Geofence *   gf = NULL;
+    if (gp == NULL || !enif_get_list_length(env, term, (unsigned *)&gp->numHoles)
+        || gp->numHoles < 1)
+    {
+        return false;
+    }
+    gp->numHoles -= 1;
+    tail = term;
+    if (!enif_get_list_cell(env, term, &head, &tail)
+        || !get_geo_fence(env, head, &gp->geofence))
+    {
+        return false;
+    }
+    if (gp->numHoles == 0)
+    {
+        gp->holes = NULL;
+        return true;
+    }
+    gp->holes = (void *)enif_alloc(sizeof(Geofence *) * gp->numHoles);
+    if (gp->holes == NULL)
+    {
+        (void)free_geo_polygon(gp);
+        return false;
+    }
+    gf = gp->holes;
+    while (enif_get_list_cell(env, tail, &head, &tail))
+    {
+        if (!get_geo_fence(env, head, gf))
+        {
+            (void)free_geo_polygon(gp);
+            return false;
+        }
+        gf++;
+    }
+    return true;
+}
+
 static ERL_NIF_TERM
 make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
 {
     double lat = radsToDegs(coord->lat);
     double lon = radsToDegs(coord->lon);
 
-    return enif_make_tuple2(
-        env,
-        enif_make_double(env, lat > 90 ? lat - 180 : lat),
-        enif_make_double(env, lon > 180 ? lon - 360 : lon));
+    return enif_make_tuple2(env,
+                            enif_make_double(env, lat > 90 ? lat - 180 : lat),
+                            enif_make_double(env, lon > 180 ? lon - 360 : lon));
 }
 
 static bool
@@ -669,7 +775,7 @@ erl_get_unidirectional_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[]
 static ERL_NIF_TERM
 erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    int res0count = res0IndexCount();
+    int     res0count = res0IndexCount();
     H3Index res0[res0count];
     getRes0Indexes(res0);
 
@@ -678,6 +784,63 @@ erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         list = enif_make_list_cell(env, make_h3idx(env, res0[i]), list);
     }
+    return list;
+}
+
+static ERL_NIF_TERM
+erl_max_polyfill_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int        resolution;
+    GeoPolygon polygon;
+    int        result;
+    if (argc != 2 || !get_resolution(env, argv[1], &resolution))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!get_geo_polygon(env, argv[0], &polygon))
+    {
+        return enif_make_badarg(env);
+    }
+    result = maxPolyfillSize(&polygon, resolution);
+    (void)free_geo_polygon(&polygon);
+    return enif_make_int(env, result);
+}
+
+static ERL_NIF_TERM
+erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int          resolution;
+    GeoPolygon   polygon;
+    int          polyfillsize;
+    H3Index *    h3indices = NULL;
+    ERL_NIF_TERM list;
+    int          i;
+    if (argc != 2 || !get_resolution(env, argv[1], &resolution))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!get_geo_polygon(env, argv[0], &polygon))
+    {
+        return enif_make_badarg(env);
+    }
+    polyfillsize = maxPolyfillSize(&polygon, resolution);
+    h3indices    = (void *)calloc(polyfillsize, sizeof(H3Index));
+    if (h3indices == NULL)
+    {
+        (void)free_geo_polygon(&polygon);
+        return enif_make_badarg(env);
+    }
+    (void)polyfill(&polygon, resolution, h3indices);
+    list = enif_make_list(env, 0);
+    for (i = polyfillsize - 1; i >= 0; i--)
+    {
+        if (h3indices[i] != 0)
+        {
+            list = enif_make_list_cell(env, make_h3idx(env, h3indices[i]), list);
+        }
+    }
+    (void)free(h3indices);
+    (void)free_geo_polygon(&polygon);
     return list;
 }
 
@@ -699,7 +862,7 @@ static ErlNifFunc nif_funcs[] =
      {"is_pentagon", 1, erl_is_pentagon, 0},
      {"parent", 2, erl_parent, 0},
      {"children", 2, erl_children, 0},
-     {"compact", 1, erl_compact, 0},
+     {"compact", 1, erl_compact, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"uncompact", 2, erl_uncompact, 0},
      {"k_ring", 2, erl_k_ring, 0},
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
@@ -707,7 +870,9 @@ static ErlNifFunc nif_funcs[] =
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
-     {"get_res0_indexes", 0, erl_get_res0_indexes, 0}};
+     {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
+     {"polyfill", 2, erl_polyfill, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+     {"max_polyfill_size", 2, erl_max_polyfill_size, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \
