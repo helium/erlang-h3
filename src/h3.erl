@@ -22,7 +22,9 @@
          max_k_ring_size/1,
          compact/1,
          uncompact/2,
-         indices_are_neighbors/2
+         indices_are_neighbors/2,
+         polyfill/2,
+         max_polyfill_size/2
         ]).
 
 -on_load(init/0).
@@ -32,6 +34,7 @@
 
 -type coord() :: {float(), float()}.
 -type h3index() :: non_neg_integer().
+-type polygon() :: [[coord(),...],...].
 -type resolution() :: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15.
 
 -spec num_hexagons(resolution()) -> pos_integer().
@@ -154,6 +157,16 @@ uncompact(_,_) ->
 
 -spec indices_are_neighbors(h3index(), h3index()) -> boolean().
 indices_are_neighbors(_, _) ->
+    not_loaded(?LINE).
+
+-spec polyfill(polygon(), resolution()) -> [h3index(),...].
+polyfill(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns the number of hexagons to allocate space for when
+%% performing a polyfill on the given GeoJSON-like data structure.
+-spec max_polyfill_size(polygon(), resolution()) -> non_neg_integer().
+max_polyfill_size(_, _) ->
     not_loaded(?LINE).
 
 init() ->
