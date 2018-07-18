@@ -844,6 +844,69 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return list;
 }
 
+static ERL_NIF_TERM
+erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    unsigned           len;
+    H3Index *          h3Set = NULL;
+    LinkedGeoPolygon   out;
+    LinkedGeoPolygon * polygon = NULL;
+    LinkedGeoLoop *    loop    = NULL;
+    LinkedGeoCoord *   coord   = NULL;
+    ERL_NIF_TERM       polygon_list;
+    ERL_NIF_TERM       loop_list;
+    ERL_NIF_TERM       coord_list;
+
+    if (argc != 1 || !enif_get_list_length(env, argv[0], &len))
+    {
+        return enif_make_badarg(env);
+    }
+
+    h3Set = (void *)calloc(len, sizeof(H3Index));
+    if (h3Set == NULL)
+    {
+        return enif_make_badarg(env);
+    }
+
+    if (!get_h3indexes(env, argv[0], h3Set, len))
+    {
+        (void)free(h3Set);
+        return enif_make_badarg(env);
+    }
+
+    (void)h3SetToLinkedGeo(h3Set, (int)len, &out);
+
+    polygon_list = enif_make_list(env, 0);
+    polygon      = &out;
+    while (polygon != NULL)
+    {
+        loop_list = enif_make_list(env, 0);
+        loop      = polygon->first;
+        while (loop != NULL)
+        {
+            coord_list = enif_make_list(env, 0);
+            coord      = loop->first;
+            while (coord != NULL)
+            {
+                coord_list =
+                    enif_make_list_cell(env,
+                                        make_geo_coord(env, &coord->vertex),
+                                        coord_list);
+                coord = coord->next;
+            }
+            loop_list = enif_make_list_cell(env, coord_list, loop_list);
+            loop      = loop->next;
+        }
+        polygon_list = enif_make_list_cell(env, loop_list, polygon_list);
+        polygon      = polygon->next;
+    }
+
+    (void)destroyLinkedPolygon(&out);
+    (void)free(h3Set);
+
+    return polygon_list;
+}
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -871,8 +934,9 @@ static ErlNifFunc nif_funcs[] =
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
      {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
-     {"polyfill", 2, erl_polyfill, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-     {"max_polyfill_size", 2, erl_max_polyfill_size, 0}};
+     {"polyfill", 2, erl_polyfill, 0},
+     {"max_polyfill_size", 2, erl_max_polyfill_size, 0},
+     {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

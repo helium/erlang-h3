@@ -27,7 +27,8 @@
          grid_distance/2,
          get_res0_indexes/0,
          polyfill/2,
-         max_polyfill_size/2
+         max_polyfill_size/2,
+         set_to_multi_polygon/1
         ]).
 
 -on_load(init/0).
@@ -184,6 +185,8 @@ get_unidirectional_edge(_, _) ->
 get_res0_indexes() ->
     not_loaded(?LINE).
 
+%% @doc Takes a given GeoJSON-like polygon and fills it with the
+%% hexagons that are contained by it.
 -spec polyfill(polygon(), resolution()) -> [h3index(),...].
 polyfill(_, _) ->
     not_loaded(?LINE).
@@ -192,6 +195,12 @@ polyfill(_, _) ->
 %% performing a polyfill on the given GeoJSON-like data structure.
 -spec max_polyfill_size(polygon(), resolution()) -> non_neg_integer().
 max_polyfill_size(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns a GeoJSON-like MultiPolygon describing the outline(s)
+%% of a set of hexagons.
+-spec set_to_multi_polygon([h3index(),...]) -> [polygon()].
+set_to_multi_polygon(_) ->
     not_loaded(?LINE).
 
 init() ->
