@@ -17,7 +17,8 @@
          k_ring_origin_index_test/1,
          k_ring_distance_origin_test/1,
          k_ring_distance_test/1,
-         compact_roundtrip_test/1
+         compact_roundtrip_test/1,
+         parent_test/1
         ]).
 
 all() ->
@@ -33,7 +34,8 @@ all() ->
      k_ring_origin_index_test,
      k_ring_distance_origin_test,
      k_ring_distance_test,
-     compact_roundtrip_test
+     compact_roundtrip_test,
+     parent_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -154,4 +156,15 @@ compact_roundtrip_test(Config) ->
     Decompressed = h3:uncompact(Compressed, 9),
     ExpandedSize = length(Decompressed),
 
+    ok.
+
+parent_test(Config) ->
+    SunnyvaleIndex = proplists:get_value(sunnyvale_index, Config),
+    Resolutions = proplists:get_value(resolutions, Config),
+    Resolution = h3:get_resolution(SunnyvaleIndex),
+    %% check we can get the parent at the same resolution and it's the same index
+    SunnyvaleIndex = h3:parent(SunnyvaleIndex, Resolution),
+    ?assertError(badarg, h3:parent(SunnyvaleIndex, Resolution+1)),
+    [ ?assertNotException(error, badarg, h3:parent(SunnyvaleIndex, R)) || R <- Resolutions, R =< Resolution ],
+    [ ?assertError(badarg, h3:parent(SunnyvaleIndex, R)) || R <- Resolutions, R > Resolution ],
     ok.

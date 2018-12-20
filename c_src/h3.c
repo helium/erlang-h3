@@ -307,7 +307,7 @@ erl_parent(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    if (res >= h3GetResolution(h3idx))
+    if (res > h3GetResolution(h3idx))
     {
         // asking for a parent with a higher resolution is nonsense
         return enif_make_badarg(env);
