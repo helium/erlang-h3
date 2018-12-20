@@ -108,7 +108,8 @@ is_pentagon(_) ->
     not_loaded(?LINE).
 
 %% @doc Returns the parent (coarser) index containing the given Index.
-%% Requests for higher resolutions than the the resolution of `Index` are an error.
+%% Requests for higher resolutions than the the resolution of `Index'
+%% are an error.
 -spec parent(Index::h3index(), ParentRes::resolution()) -> h3index().
 parent(_, _) ->
     not_loaded(?LINE).
