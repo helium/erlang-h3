@@ -633,6 +633,11 @@ erl_grid_distance(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int64_t result = h3Distance(h3idx_src, h3idx_dest);
+    if (result < 0)
+    {
+        return enif_make_badarg(env);
+    }
+
     return enif_make_int64(env, result);
 }
 
