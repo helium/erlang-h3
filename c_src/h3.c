@@ -617,6 +617,29 @@ erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                                                                   : ATOM_FALSE;
 }
 
+static ERL_NIF_TERM
+erl_get_h3_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_origin;
+    if (!get_h3idx(env, argv[0], &h3idx_origin))
+    {
+        return enif_make_badarg(env);
+    }
+
+    H3Index h3idx_destination;
+    if (!get_h3idx(env, argv[1], &h3idx_destination))
+    {
+        return enif_make_badarg(env);
+    }
+
+    H3Index h3idx = getH3UnidirectionalEdge(h3idx_origin, h3idx_destination);
+    if (!h3UnidirectionalEdgeIsValid(h3idx))
+    {
+        return enif_make_badarg(env);
+    }
+    return make_h3idx(env, h3idx);
+}
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -640,7 +663,8 @@ static ErlNifFunc nif_funcs[] =
      {"k_ring", 2, erl_k_ring, 0},
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
-     {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0}};
+     {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
+     {"h3_edge", 2, erl_get_h3_edge, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \
