@@ -160,6 +160,11 @@ uncompact(_,_) ->
 indices_are_neighbors(_, _) ->
     not_loaded(?LINE).
 
+%% @doc Returns the distance in grid cells between the two
+%% indexes. Returns a negative number if finding the distance
+%% failed. Finding the distance can fail because the two indexes are
+%% not comparable (different resolutions), too far apart, or are
+%% separated by pentagonal distortion.
 -spec grid_distance(h3index(), h3index()) -> integer().
 grid_distance(_, _) ->
     not_loaded(?LINE).
