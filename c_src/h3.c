@@ -618,6 +618,25 @@ erl_indices_are_neighbors(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static ERL_NIF_TERM
+erl_grid_distance(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_src;
+    if (!get_h3idx(env, argv[0], &h3idx_src))
+    {
+        return enif_make_badarg(env);
+    }
+
+    H3Index h3idx_dest;
+    if (!get_h3idx(env, argv[1], &h3idx_dest))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int64_t result = h3Distance(h3idx_src, h3idx_dest);
+    return enif_make_int64(env, result);
+}
+
+static ERL_NIF_TERM
 erl_get_h3_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     H3Index h3idx_origin;
@@ -664,7 +683,8 @@ static ErlNifFunc nif_funcs[] =
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
-     {"h3_edge", 2, erl_get_h3_edge, 0}};
+     {"h3_edge", 2, erl_get_h3_edge, 0},
+     {"grid_distance", 2, erl_grid_distance, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

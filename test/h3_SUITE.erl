@@ -19,7 +19,8 @@
          k_ring_distance_origin_test/1,
          k_ring_distance_test/1,
          compact_roundtrip_test/1,
-         parent_test/1
+         parent_test/1,
+         grid_distance_test/1
         ]).
 
 all() ->
@@ -37,7 +38,8 @@ all() ->
      k_ring_distance_origin_test,
      k_ring_distance_test,
      compact_roundtrip_test,
-     parent_test
+     parent_test,
+     grid_distance_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -176,4 +178,14 @@ parent_test(Config) ->
     ?assertError(badarg, h3:parent(SunnyvaleIndex, Resolution+1)),
     [ ?assertNotException(error, badarg, h3:parent(SunnyvaleIndex, R)) || R <- Resolutions, R =< Resolution ],
     [ ?assertError(badarg, h3:parent(SunnyvaleIndex, R)) || R <- Resolutions, R > Resolution ],
+    ok.
+
+grid_distance_test(_Config) ->
+    WhiteHouse = h3:from_geo({38.898030, -77.036558}, 8),
+    CapitolOneArena = h3:from_geo({38.898663, -77.020803}, 8),
+    %% This distance is ~1 mile, which is grid distance = 2 at resolution = 8
+    ct:pal("WhiteHouse: ~p, CapitolOneArena: ~p", [WhiteHouse, CapitolOneArena]),
+    Distance = h3:grid_distance(WhiteHouse, CapitolOneArena),
+    ct:pal("Distance: ~p", [Distance]),
+    ?assertEqual(2, Distance),
     ok.

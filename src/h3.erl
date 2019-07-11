@@ -23,7 +23,8 @@
          compact/1,
          uncompact/2,
          indices_are_neighbors/2,
-         h3_edge/2
+         h3_edge/2,
+         grid_distance/2
         ]).
 
 -on_load(init/0).
@@ -157,6 +158,15 @@ uncompact(_,_) ->
 
 -spec indices_are_neighbors(h3index(), h3index()) -> boolean().
 indices_are_neighbors(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns the distance in grid cells between the two
+%% indexes. Returns a negative number if finding the distance
+%% failed. Finding the distance can fail because the two indexes are
+%% not comparable (different resolutions), too far apart, or are
+%% separated by pentagonal distortion.
+-spec grid_distance(h3index(), h3index()) -> integer().
+grid_distance(_, _) ->
     not_loaded(?LINE).
 
 %% @doc Returns a unidirectiol edge based on the given origin
