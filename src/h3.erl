@@ -22,7 +22,8 @@
          max_k_ring_size/1,
          compact/1,
          uncompact/2,
-         indices_are_neighbors/2
+         indices_are_neighbors/2,
+         h3_edge/2
         ]).
 
 -on_load(init/0).
@@ -156,6 +157,12 @@ uncompact(_,_) ->
 
 -spec indices_are_neighbors(h3index(), h3index()) -> boolean().
 indices_are_neighbors(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns a unidirectiol edge based on the given origin
+%% and destination.
+-spec h3_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
+h3_edge(_, _) ->
     not_loaded(?LINE).
 
 init() ->
