@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION="v3.0.7"
+VERSION="v3.1.0"
 
 
 if [ ! -d c_src/h3 ]; then
