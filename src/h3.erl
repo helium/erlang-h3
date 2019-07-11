@@ -23,7 +23,7 @@
          compact/1,
          uncompact/2,
          indices_are_neighbors/2,
-         h3_edge/2,
+         get_edge/2,
          grid_distance/2
         ]).
 
@@ -171,8 +171,8 @@ grid_distance(_, _) ->
 
 %% @doc Returns a unidirectiol edge based on the given origin
 %% and destination.
--spec h3_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
-h3_edge(_, _) ->
+-spec get_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
+get_edge(_, _) ->
     not_loaded(?LINE).
 
 init() ->
