@@ -13,7 +13,7 @@
          h3_to_geo_boundary_test/1,
          hex_area_km2_decreasing_test/1,
          self_not_a_neighbor_test/1,
-         get_edge_test/1,
+         get_unidirectional_edge_test/1,
          h3_of_geo_coord_test/1,
          k_ring_origin_index_test/1,
          k_ring_distance_origin_test/1,
@@ -32,7 +32,7 @@ all() ->
      h3_to_geo_constrain_test,
      hex_area_km2_decreasing_test,
      self_not_a_neighbor_test,
-     get_edge_test,
+     get_unidirectional_edge_test,
      h3_of_geo_coord_test,
      k_ring_origin_index_test,
      k_ring_distance_origin_test,
@@ -111,10 +111,10 @@ self_not_a_neighbor_test(_Config) ->
     ok.
 
 
-get_edge_test(Config) ->
+get_unidirectional_edge_test(Config) ->
     ParisIndex = proplists:get_value(paris_index, Config),
     NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
-    1401326775769759743 = h3:get_edge(ParisIndex, NorthParisIndex),
+    1401326775769759743 = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex),
     ok.
 
 h3_of_geo_coord_test(_Config) ->
