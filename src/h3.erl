@@ -23,7 +23,7 @@
          compact/1,
          uncompact/2,
          indices_are_neighbors/2,
-         h3_edge/2,
+         get_unidirectional_edge/2,
          grid_distance/2
         ]).
 
@@ -161,8 +161,8 @@ indices_are_neighbors(_, _) ->
     not_loaded(?LINE).
 
 %% @doc Returns the distance in grid cells between the two
-%% indexes. Returns a negative number if finding the distance
-%% failed. Finding the distance can fail because the two indexes are
+%% indexes. Throws a `badarg' if the distance can not be
+%% found. Finding the distance can fail because the two indexes are
 %% not comparable (different resolutions), too far apart, or are
 %% separated by pentagonal distortion.
 -spec grid_distance(h3index(), h3index()) -> integer().
@@ -171,8 +171,8 @@ grid_distance(_, _) ->
 
 %% @doc Returns a unidirectiol edge based on the given origin
 %% and destination.
--spec h3_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
-h3_edge(_, _) ->
+-spec get_unidirectional_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
+get_unidirectional_edge(_, _) ->
     not_loaded(?LINE).
 
 init() ->
