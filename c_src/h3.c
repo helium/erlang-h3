@@ -29,6 +29,13 @@ get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest)
     return enif_get_uint64(env, term, (unsigned long *)dest) && h3IsValid(*dest);
 }
 
+static bool
+get_h3idx_edge(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest)
+{
+    return enif_get_uint64(env, term, (unsigned long *)dest)
+           && h3UnidirectionalEdgeIsValid(*dest);
+}
+
 static ERL_NIF_TERM
 make_h3idx(ErlNifEnv * env, H3Index index)
 {
@@ -69,10 +76,9 @@ make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
     double lat = radsToDegs(coord->lat);
     double lon = radsToDegs(coord->lon);
 
-    return enif_make_tuple2(
-        env,
-        enif_make_double(env, lat > 90 ? lat - 180 : lat),
-        enif_make_double(env, lon > 180 ? lon - 360 : lon));
+    return enif_make_tuple2(env,
+                            enif_make_double(env, lat > 90 ? lat - 180 : lat),
+                            enif_make_double(env, lon > 180 ? lon - 360 : lon));
 }
 
 static bool
@@ -665,6 +671,112 @@ erl_get_unidirectional_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[]
     return make_h3idx(env, h3idx);
 }
 
+static ERL_NIF_TERM
+erl_get_origin_from_unidirectional_edge(ErlNifEnv *        env,
+                                        int                argc,
+                                        const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_edge;
+    if (!get_h3idx_edge(env, argv[0], &h3idx_edge))
+    {
+        return enif_make_badarg(env);
+    }
+    H3Index h3idx_origin = getOriginH3IndexFromUnidirectionalEdge(h3idx_edge);
+    if (h3idx_origin == 0)
+    {
+        return enif_make_badarg(env);
+    }
+
+    return make_h3idx(env, h3idx_origin);
+}
+
+static ERL_NIF_TERM
+erl_get_destination_from_unidirectional_edge(ErlNifEnv *        env,
+                                             int                argc,
+                                             const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_edge;
+    if (!get_h3idx_edge(env, argv[0], &h3idx_edge))
+    {
+        return enif_make_badarg(env);
+    }
+    H3Index h3idx_origin =
+        getDestinationH3IndexFromUnidirectionalEdge(h3idx_edge);
+
+    if (h3idx_origin == 0)
+    {
+        return enif_make_badarg(env);
+    }
+
+    return make_h3idx(env, h3idx_origin);
+}
+
+static ERL_NIF_TERM
+erl_get_indexes_from_unidirectional_edge(ErlNifEnv *        env,
+                                         int                argc,
+                                         const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_edge;
+    H3Index h3idx_pair[2] = {0};
+    if (!get_h3idx_edge(env, argv[0], &h3idx_edge))
+    {
+        return enif_make_badarg(env);
+    }
+
+    getH3IndexesFromUnidirectionalEdge(h3idx_edge, h3idx_pair);
+    if (h3idx_pair[0] == 0 || h3idx_pair[1] == 0)
+    {
+        return enif_make_badarg(env);
+    }
+
+    return enif_make_tuple2(env,
+                            make_h3idx(env, h3idx_pair[0]),
+                            make_h3idx(env, h3idx_pair[1]));
+}
+
+static ERL_NIF_TERM
+erl_get_unidirectional_edges_from_origin(ErlNifEnv *        env,
+                                         int                argc,
+                                         const ERL_NIF_TERM argv[])
+{
+    H3Index h3idx_edge;
+    H3Index h3idx_edges[6] = {0};
+
+    if (!get_h3idx(env, argv[0], &h3idx_edge))
+    {
+        return enif_make_badarg(env);
+    }
+
+    getH3UnidirectionalEdgesFromHexagon(h3idx_edge, h3idx_edges);
+
+    return make_h3indexes(env, h3idx_edges, 6);
+}
+
+static ERL_NIF_TERM
+erl_get_unidirectional_edge_boundary(ErlNifEnv *        env,
+                                     int                argc,
+                                     const ERL_NIF_TERM argv[])
+{
+    H3Index     h3idx_edge;
+    GeoBoundary boundary;
+
+    if (!get_h3idx_edge(env, argv[0], &h3idx_edge))
+    {
+        return enif_make_badarg(env);
+    }
+
+    getH3UnidirectionalEdgeBoundary(h3idx_edge, &boundary);
+
+    ERL_NIF_TERM verts[MAX_CELL_BNDRY_VERTS];
+    for (int i = 0; i < boundary.numVerts; i++)
+    {
+        verts[i] = make_geo_coord(env, &boundary.verts[i]);
+    }
+
+    return enif_make_list_from_array(env, verts, boundary.numVerts);
+}
+
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -690,7 +802,27 @@ static ErlNifFunc nif_funcs[] =
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
-     {"grid_distance", 2, erl_grid_distance, 0}};
+     {"grid_distance", 2, erl_grid_distance, 0},
+     {"get_origin_from_unidirectional_edge",
+      1,
+      erl_get_origin_from_unidirectional_edge,
+      0},
+     {"get_destination_from_unidirectional_edge",
+      1,
+      erl_get_destination_from_unidirectional_edge,
+      0},
+     {"get_indexes_from_unidirectional_edge",
+      1,
+      erl_get_indexes_from_unidirectional_edge,
+      0},
+     {"get_unidirectional_edges_from_origin",
+      1,
+      erl_get_unidirectional_edges_from_origin,
+      0},
+     {"get_unidirectional_edge_boundary",
+      1,
+      erl_get_unidirectional_edge_boundary,
+      0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

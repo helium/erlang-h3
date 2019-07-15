@@ -24,7 +24,12 @@
          uncompact/2,
          indices_are_neighbors/2,
          get_unidirectional_edge/2,
-         grid_distance/2
+         grid_distance/2,
+         get_origin_from_unidirectional_edge/1,
+         get_destination_from_unidirectional_edge/1,
+         get_indexes_from_unidirectional_edge/1,
+         get_unidirectional_edges_from_origin/1,
+         get_unidirectional_edge_boundary/1
         ]).
 
 -on_load(init/0).
@@ -169,10 +174,31 @@ indices_are_neighbors(_, _) ->
 grid_distance(_, _) ->
     not_loaded(?LINE).
 
-%% @doc Returns a unidirectiol edge based on the given origin
+%% @doc Returns a unidirectional edge based on the given origin
 %% and destination.
 -spec get_unidirectional_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
 get_unidirectional_edge(_, _) ->
+    not_loaded(?LINE).
+
+
+-spec get_origin_from_unidirectional_edge(Edge::h3index()) -> Origin::h3index().
+get_origin_from_unidirectional_edge(_) ->
+    not_loaded(?LINE).
+
+-spec get_destination_from_unidirectional_edge(Edge::h3index()) -> Destination::h3index().
+get_destination_from_unidirectional_edge(_) ->
+    not_loaded(?LINE).
+
+-spec get_indexes_from_unidirectional_edge(Edge::h3index()) -> {Origin::h3index(), Destination::h3index()}.
+get_indexes_from_unidirectional_edge(_) ->
+    not_loaded(?LINE).
+
+-spec get_unidirectional_edges_from_origin(Origin::h3index()) -> [Edge::h3index()].
+get_unidirectional_edges_from_origin(_) ->
+    not_loaded(?LINE).
+
+-spec get_unidirectional_edge_boundary(Origin::h3index()) -> [Edge::h3index()].
+get_unidirectional_edge_boundary(_) ->
     not_loaded(?LINE).
 
 init() ->

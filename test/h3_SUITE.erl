@@ -20,7 +20,12 @@
          k_ring_distance_test/1,
          compact_roundtrip_test/1,
          parent_test/1,
-         grid_distance_test/1
+         grid_distance_test/1,
+         origin_from_edge_test/1,
+         destination_from_edge_test/1,
+         indexes_from_edge_test/1,
+         edges_from_origin_test/1,
+         boundary_from_edge_test/1
         ]).
 
 all() ->
@@ -39,7 +44,12 @@ all() ->
      k_ring_distance_test,
      compact_roundtrip_test,
      parent_test,
-     grid_distance_test
+     grid_distance_test,
+     origin_from_edge_test,
+     destination_from_edge_test,
+     indexes_from_edge_test,
+     edges_from_origin_test,
+     boundary_from_edge_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -114,7 +124,10 @@ self_not_a_neighbor_test(_Config) ->
 get_unidirectional_edge_test(Config) ->
     ParisIndex = proplists:get_value(paris_index, Config),
     NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
-    1401326775769759743 = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex),
+    ct:pal("ParisIndex: ~p, NorthParisIndex: ~p", [ParisIndex, NorthParisIndex]),
+    Edge = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex), 
+    ct:pal("Edge: ~p", [Edge]),
+    ?assertEqual(1401326775769759743, Edge),
     ok.
 
 h3_of_geo_coord_test(_Config) ->
@@ -189,3 +202,48 @@ grid_distance_test(_Config) ->
     ct:pal("Distance: ~p", [Distance]),
     ?assertEqual(2, Distance),
     ok.
+
+origin_from_edge_test(Config) ->
+    ParisIndex = proplists:get_value(paris_index, Config),
+    NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
+    Edge = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex), 
+    ct:pal("Edge ~p", [Edge]),
+    OriginIndex = h3:get_origin_from_unidirectional_edge(Edge),
+    %% Paris Index
+    ?assertEqual(608693241352552447, OriginIndex).
+
+destination_from_edge_test(Config) ->
+    ParisIndex = proplists:get_value(paris_index, Config),
+    NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
+    Edge = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex), 
+    ct:pal("Edge ~p", [Edge]),
+    DestinationIndex = h3:get_destination_from_unidirectional_edge(Edge),
+    %% North Paris Index
+    ?assertEqual(608693240849235967, DestinationIndex).
+
+indexes_from_edge_test(Config) ->
+    ParisIndex = proplists:get_value(paris_index, Config),
+    NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
+    Edge = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex), 
+    ct:pal("Edge ~p", [Edge]),
+    {OriginIndex, DestinationIndex} = h3:get_indexes_from_unidirectional_edge(Edge),
+    ?assertEqual(ParisIndex, OriginIndex),
+    ?assertEqual(NorthParisIndex, DestinationIndex).
+
+edges_from_origin_test(Config) ->
+    ParisIndex = proplists:get_value(paris_index, Config),
+    Edges = h3:get_unidirectional_edges_from_origin(ParisIndex),
+    Hexagon = [1617499557883543551, 1545441963845615615,
+	       1473384369807687679, 1401326775769759743,
+	       1329269181731831807, 1257211587693903871],
+    ?assertEqual(Edges, Hexagon).
+
+boundary_from_edge_test(Config) ->
+    ParisIndex = proplists:get_value(paris_index, Config),
+    NorthParisIndex = h3:from_geo({37.3715593, -122.0553238}, 7),
+    Edge = h3:get_unidirectional_edge(ParisIndex, NorthParisIndex), 
+    ct:pal("Edge ~p", [Edge]),
+    [BoundaryStart, BoundaryStop] = h3:get_unidirectional_edge_boundary(Edge),
+    ?assertEqual({37.36351522362578,-122.04279666094905}, BoundaryStart),
+    ?assertEqual({37.362335222443996,-122.05909124330347}, BoundaryStop).
+
