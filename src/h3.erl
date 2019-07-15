@@ -28,7 +28,7 @@
          get_origin_from_unidirectional_edge/1,
          get_destination_from_unidirectional_edge/1,
          get_indexes_from_unidirectional_edge/1,
-         get_unidirectional_edges_from_origin/1,
+         get_unidirectional_edges_from_hexagon/1,
          get_unidirectional_edge_boundary/1
         ]).
 
@@ -180,23 +180,32 @@ grid_distance(_, _) ->
 get_unidirectional_edge(_, _) ->
     not_loaded(?LINE).
 
-
+%% @doc Returns the origin index based on the given unidirectional
+%% edge.
 -spec get_origin_from_unidirectional_edge(Edge::h3index()) -> Origin::h3index().
 get_origin_from_unidirectional_edge(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns the destination index based on the given unidirectional
+%% edge. 
 -spec get_destination_from_unidirectional_edge(Edge::h3index()) -> Destination::h3index().
 get_destination_from_unidirectional_edge(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns the origin and destination index based on the given
+%% unidirectional edge.
 -spec get_indexes_from_unidirectional_edge(Edge::h3index()) -> {Origin::h3index(), Destination::h3index()}.
 get_indexes_from_unidirectional_edge(_) ->
     not_loaded(?LINE).
 
--spec get_unidirectional_edges_from_origin(Origin::h3index()) -> [Edge::h3index()].
-get_unidirectional_edges_from_origin(_) ->
+%% @doc Returns the unidirectional edges based on a given
+%% hexagon's origin index.
+-spec get_unidirectional_edges_from_hexagon(Origin::h3index()) -> [Edge::h3index()].
+get_unidirectional_edges_from_hexagon(_) ->
     not_loaded(?LINE).
 
+%% @doc Returns the geo boundary based on the given unidirectional
+%% edge.
 -spec get_unidirectional_edge_boundary(Origin::h3index()) -> [Edge::h3index()].
 get_unidirectional_edge_boundary(_) ->
     not_loaded(?LINE).

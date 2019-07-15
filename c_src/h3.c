@@ -251,7 +251,6 @@ erl_get_resolution(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_int(env, result);
 }
 
-
 static ERL_NIF_TERM
 erl_get_base_cell(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -272,7 +271,6 @@ erl_is_valid(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return get_h3idx(env, argv[0], &h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
 
-
 static ERL_NIF_TERM
 erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -284,7 +282,6 @@ erl_is_class3(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     return h3IsResClassIII(h3idx) ? ATOM_TRUE : ATOM_FALSE;
 }
-
 
 static ERL_NIF_TERM
 erl_is_pentagon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
@@ -681,6 +678,7 @@ erl_get_origin_from_unidirectional_edge(ErlNifEnv *        env,
     {
         return enif_make_badarg(env);
     }
+
     H3Index h3idx_origin = getOriginH3IndexFromUnidirectionalEdge(h3idx_edge);
     if (h3idx_origin == 0)
     {
@@ -700,9 +698,9 @@ erl_get_destination_from_unidirectional_edge(ErlNifEnv *        env,
     {
         return enif_make_badarg(env);
     }
+
     H3Index h3idx_origin =
         getDestinationH3IndexFromUnidirectionalEdge(h3idx_edge);
-
     if (h3idx_origin == 0)
     {
         return enif_make_badarg(env);
@@ -735,19 +733,18 @@ erl_get_indexes_from_unidirectional_edge(ErlNifEnv *        env,
 }
 
 static ERL_NIF_TERM
-erl_get_unidirectional_edges_from_origin(ErlNifEnv *        env,
-                                         int                argc,
-                                         const ERL_NIF_TERM argv[])
+erl_get_unidirectional_edges_from_hexagon(ErlNifEnv *        env,
+                                          int                argc,
+                                          const ERL_NIF_TERM argv[])
 {
-    H3Index h3idx_edge;
+    H3Index h3idx;
     H3Index h3idx_edges[6] = {0};
-
-    if (!get_h3idx(env, argv[0], &h3idx_edge))
+    if (!get_h3idx(env, argv[0], &h3idx))
     {
         return enif_make_badarg(env);
     }
 
-    getH3UnidirectionalEdgesFromHexagon(h3idx_edge, h3idx_edges);
+    getH3UnidirectionalEdgesFromHexagon(h3idx, h3idx_edges);
 
     return make_h3indexes(env, h3idx_edges, 6);
 }
@@ -759,7 +756,6 @@ erl_get_unidirectional_edge_boundary(ErlNifEnv *        env,
 {
     H3Index     h3idx_edge;
     GeoBoundary boundary;
-
     if (!get_h3idx_edge(env, argv[0], &h3idx_edge))
     {
         return enif_make_badarg(env);
@@ -815,9 +811,9 @@ static ErlNifFunc nif_funcs[] =
       1,
       erl_get_indexes_from_unidirectional_edge,
       0},
-     {"get_unidirectional_edges_from_origin",
+     {"get_unidirectional_edges_from_hexagon",
       1,
-      erl_get_unidirectional_edges_from_origin,
+      erl_get_unidirectional_edges_from_hexagon,
       0},
      {"get_unidirectional_edge_boundary",
       1,
