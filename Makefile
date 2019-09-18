@@ -16,3 +16,9 @@ typecheck:
 
 doc:
 	$(REBAR) edoc
+
+ci:
+	$(REBAR) dialyzer && $(REBAR) as test do ct
+	$(REBAR) as test do cover
+	$(REBAR) covertool generate
+	codecov -f _build/test/covertool/h3.covertool.xml

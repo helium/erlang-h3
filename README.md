@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/helium/erlang-h3.svg?branch=master)](https://travis-ci.org/helium/erlang-h3)
-
 # erlang-h3
 
 The `erlang-h3` library provides an Erlang binding for [Uber's
 H3](https://uber.github.io/h3) spatial coordinate library.
 
+[![Build status](https://badge.buildkite.com/977eb06da3ecf54e0e423fbe384892b27a265faefbfd69fa93.svg)](https://buildkite.com/helium/erlang-h3)
+[![codecov](https://codecov.io/gh/helium/erlang-h3/branch/master/graph/badge.svg)](https://codecov.io/gh/helium/erlang-h3)
 
 Install
 ------
