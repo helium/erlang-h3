@@ -17,11 +17,14 @@ if [ ! "$VERSION" = "$CURRENT_VERSION" ]; then
     git checkout $VERSION
 fi
 
-if [ ! -d build ]; then
-    mkdir build
-fi
-cd build
-if [ ! -f Makefile ]; then
-    cmake ..
-fi
-make -j h3
+cmake                          \
+    -H.                        \
+    -Bbuild                    \
+    -DBUILD_TESTING=OFF        \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_COVERAGE=OFF      \
+    -DENABLE_DOCS=OFF          \
+    -DENABLE_FORMAT=OFF        \
+    -DENABLE_LINTING=OFF
+
+cmake --build build --target h3
