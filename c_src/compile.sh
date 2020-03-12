@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION="v3.1.0"
+VERSION="v3.6.3"
 
 
 if [ ! -d c_src/h3 ]; then
@@ -22,6 +22,7 @@ cmake                          \
     -Bbuild                    \
     -DBUILD_TESTING=OFF        \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DENABLE_COVERAGE=OFF      \
     -DENABLE_DOCS=OFF          \
     -DENABLE_FORMAT=OFF        \
