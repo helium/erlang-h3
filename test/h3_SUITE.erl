@@ -81,7 +81,7 @@ h3_to_geo_test(_Config) ->
 h3_to_geo_constrain_test(_Config) ->
     {Lat, Lon} = h3:to_geo(h3:from_string("87283472bffffff")),
     ct:pal("Lat: ~p, Lon: ~p", [Lat, Lon]),
-    {37.35171820183272, -122.05032565263943} = {Lat, Lon},
+    {37.35171820183272, -122.05032565263944} = {Lat, Lon},
     ok.
 
 h3_to_geo_boundary_test(_Config) ->
