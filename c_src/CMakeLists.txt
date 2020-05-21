@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+include(ASan)
 
 IF (APPLE)
   set(CMAKE_MODULE_LINKER_FLAGS "-flat_namespace -undefined suppress")
