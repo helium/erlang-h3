@@ -30,7 +30,7 @@
 -on_load(init/0).
 
 -define(APPNAME, h3).
--define(LIBNAME, 'h3').
+-define(LIBNAME, 'libh3').
 
 -type coord() :: {float(), float()}.
 -type h3index() :: non_neg_integer().
