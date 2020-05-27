@@ -1,7 +1,7 @@
 ##########################################################################
 # Project Setup                                                          #
 ##########################################################################
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.3)
 project(ErlangH3 C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
