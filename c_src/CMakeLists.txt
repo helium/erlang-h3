@@ -1,7 +1,7 @@
 ##########################################################################
 # Project Setup                                                          #
 ##########################################################################
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 project(ErlangH3 C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
@@ -26,18 +26,34 @@ endif()
 ##########################################################################
 # Static Analysis                                                        #
 ##########################################################################
-find_program(CPPCHECK NAMES cppcheck)
-if(CPPCHECK)
-  message(STATUS "Found cppcheck: ${CPPCHECK}")
-  set(CMAKE_C_CPPCHECK ${CPPCHECK}
-    --enable=all
-    --inline-suppr
-    --inconclusive
-    --quiet
-    --std=c${CMAKE_C_STANDARD}
-    --suppress=missingInclude
-    --template=gcc
+if(CMAKE_VERSION VERSION_GREATER 3.9)
+  find_program(CPPCHECK
+    NAMES cppcheck
+    DOC   "Path to cppcheck executable"
     )
+  if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    set(CMAKE_C_CPPCHECK ${CPPCHECK}
+      --enable=all
+      --inline-suppr
+      --inconclusive
+      --quiet
+      --std=c${CMAKE_C_STANDARD}
+      --suppress=missingInclude
+      --template=gcc
+      )
+  endif(CPPCHECK)
+endif()
+
+if(CMAKE_VERSION VERSION_GREATER 3.5)
+  find_program(CLANG_TIDY
+    NAMES clang-tidy
+    DOC   "Path to clang-tidy executable"
+    )
+  if(CLANG_TIDY)
+    message(STATUS "Found clang-tidy: ${CLANG_TIDY}")
+    set(CMAKE_C_CLANG_TIDY "${CLANG_TIDY}")
+  endif(CLANG_TIDY)
 endif()
 
 
