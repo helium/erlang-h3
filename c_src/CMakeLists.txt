@@ -14,7 +14,37 @@ IF (APPLE)
   set(CMAKE_MACOSX_RPATH 1)
 ENDIF()
 
+#
+# Enable sanitization if environment variable is set
+#
+# Truth Table
+#
+# +----------------------+--------------------+------------------+
+# | SANITIZE_ERLANG_NIFS | SANITIZE_ERLANG_H3 | Enable santizer? |
+# +----------------------+--------------------+------------------+
+# | undefined            | undefined          |                0 |
+# | 1                    | undefined          |                1 |
+# | don't care           | 1                  |                1 |
+# | don't care           | 0                  |                0 |
+# +----------------------+--------------------+------------------+
+#
+if(DEFINED ENV{SANITIZE_ERLANG_H3})
+  if($ENV{SANITIZE_ERLANG_H3})
+    set(CMAKE_BUILD_TYPE ASan CACHE STRING "Choose the type of build." FORCE)
+  else()
+    unset(CMAKE_BUILD_TYPE CACHE)
+  endif()
+elseif(DEFINED ENV{SANITIZE_ERLANG_NIFS})
+  if($ENV{SANITIZE_ERLANG_NIFS})
+    set(CMAKE_BUILD_TYPE ASan CACHE STRING "Choose the type of build." FORCE)
+  else()
+    unset(CMAKE_BUILD_TYPE CACHE)
+  endif($ENV{SANITIZE_ERLANG_NIFS})
+endif()
+
+#
 # Set a default build type if none was specified
+#
 set(default_build_type "Release")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
