@@ -10,8 +10,8 @@ endif()
 
 ExternalProject_Add(external-h3
   PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/external-h3
-  URL               https://github.com/uber/h3/archive/v3.6.3.tar.gz
-  URL_HASH          SHA256=3ba219959ecb0ef6956f05113aa659d7b605e4eebbdca561b8243ce309e4684e
+  GIT_REPOSITORY    http://github.com/uber/h3.git
+  GIT_TAG           v3.6.3
   BUILD_IN_SOURCE   0
   CMAKE_ARGS        -DBUILD_BENCHMARKS=OFF
                     -DBUILD_FILTERS=OFF
