@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    container: madninja/builder-erlang:2
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: rebar3 compile
+
+    - name: Run Dialyzer
+      run: rebar3 dialyzer
+
+    - name: Run tests
+      run: rebar3 ct
+
+    - name: Generate coverage report
+      run: rebar3 covertool generate
+
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        file: _build/test/covertool/h3.covertool.xml
+        fail_ci_if_error: true
