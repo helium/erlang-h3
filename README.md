@@ -1,6 +1,6 @@
 # erlang-h3
 
-[![Build status](https://badge.buildkite.com/977eb06da3ecf54e0e423fbe384892b27a265faefbfd69fa93.svg)](https://buildkite.com/helium/erlang-h3)
+![Build status](https://github.com/helium/erlang-h3/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/helium/erlang-h3/branch/master/graph/badge.svg)](https://codecov.io/gh/helium/erlang-h3)
 [![Hex.pm](https://img.shields.io/hexpm/v/h3)](https://hex.pm/packages/h3)
 
