@@ -9,7 +9,7 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    container: madninja/builder-erlang:2
+    container: helium/builder-erlang:1
 
     steps:
     - uses: actions/checkout@v2
