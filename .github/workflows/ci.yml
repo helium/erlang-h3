@@ -9,19 +9,26 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    container: madninja/builder-erlang:2
+    container: heliumsystems/builder-erlang:1
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Build
+      env:
+        SANITIZE_ERLANG_NIFS: 1
       run: rebar3 compile
 
     - name: Run Dialyzer
       run: rebar3 dialyzer
 
     - name: Run tests
-      run: rebar3 ct
+      env:
+        # We turn off leak detection to reduce noise from leaking
+        # processes that rebar exec()s before it actually runs the
+        # tests.
+        ASAN_OPTIONS: detect_leaks=0
+      run: LD_PRELOAD="$(cc --print-file libasan.so)" rebar3 ct
 
     - name: Generate coverage report
       run: rebar3 covertool generate
