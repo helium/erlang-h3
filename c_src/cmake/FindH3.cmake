@@ -8,10 +8,27 @@ if(CMAKE_BUILD_TYPE)
   string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE_UC)
 endif()
 
+# Use this repo's semantic version as the tag to fetch from up
+# upstream uber/h3
+find_package(Git REQUIRED)
+execute_process(COMMAND
+  ${GIT_EXECUTABLE} describe --tags
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  RESULT_VARIABLE GIT_SUCCESS
+  OUTPUT_VARIABLE ERLANG_H3_TAG
+  )
+if(NOT GIT_SUCCESS EQUAL "0")
+  message(WARNING "could not get erlang-h3 tag, falling back on hard-coded version")
+  set(ERLANG_H3_TAG "v3.6.4")
+endif()
+string(REGEX REPLACE "\n$" "" ERLANG_H3_TAG "${ERLANG_H3_TAG}")
+string(REGEX MATCH "^v[0-9]+\.[0-9]+\.[0-9]+" UPSTREAM_H3_GIT_TAG "${ERLANG_H3_TAG}")
+message(STATUS "Using upstream h3 tag ${UPSTREAM_H3_GIT_TAG} based on local tag ${ERLANG_H3_TAG}")
+
 ExternalProject_Add(external-h3
   PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/external-h3
   GIT_REPOSITORY    http://github.com/uber/h3.git
-  GIT_TAG           v3.6.3
+  GIT_TAG           ${UPSTREAM_H3_GIT_TAG}
   BUILD_IN_SOURCE   0
   CMAKE_ARGS        -DBUILD_BENCHMARKS=OFF
                     -DBUILD_FILTERS=OFF
