@@ -578,6 +578,7 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     H3Index * out_indices = calloc(out_len, sizeof(H3Index));
     if (out_indices == NULL)
     {
+        free(in_indices);
         return enif_make_badarg(env);
     }
 
