@@ -24,7 +24,8 @@
          uncompact/2,
          indices_are_neighbors/2,
          get_unidirectional_edge/2,
-         grid_distance/2
+         grid_distance/2,
+         get_res0_indexes/0
         ]).
 
 -on_load(init/0).
@@ -169,10 +170,15 @@ indices_are_neighbors(_, _) ->
 grid_distance(_, _) ->
     not_loaded(?LINE).
 
-%% @doc Returns a unidirectiol edge based on the given origin
+%% @doc Returns a unidirectional edge based on the given origin
 %% and destination.
 -spec get_unidirectional_edge(Origin::h3index(), Destination::h3index()) -> Edge::h3index().
 get_unidirectional_edge(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns all h3 indexes at resolution 0.
+-spec get_res0_indexes() -> [h3index(),...].
+get_res0_indexes() ->
     not_loaded(?LINE).
 
 init() ->

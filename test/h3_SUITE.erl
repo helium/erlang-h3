@@ -20,7 +20,8 @@
          k_ring_distance_test/1,
          compact_roundtrip_test/1,
          parent_test/1,
-         grid_distance_test/1
+         grid_distance_test/1,
+         res0_test/1
         ]).
 
 all() ->
@@ -39,7 +40,8 @@ all() ->
      k_ring_distance_test,
      compact_roundtrip_test,
      parent_test,
-     grid_distance_test
+     grid_distance_test,
+     res0_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -189,3 +191,6 @@ grid_distance_test(_Config) ->
     ct:pal("Distance: ~p", [Distance]),
     ?assertEqual(2, Distance),
     ok.
+
+res0_test(_Config) ->
+    ?assertEqual(122, length(h3:get_res0_indexes())).
