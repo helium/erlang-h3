@@ -681,6 +681,33 @@ erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return list;
 }
 
+static ERL_NIF_TERM
+erl_h3line(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    H3Index start;
+    if (!get_h3idx(env, argv[0], &start))
+    {
+        return enif_make_badarg(env);
+    }
+
+    H3Index end;
+    if (!get_h3idx(env, argv[1], &end))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int linecount = h3LineSize(start, end);
+    H3Index line[linecount];
+    h3Line(start, end, line);
+
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    for (int i = linecount - 1; i >= 0; i--)
+    {
+        list = enif_make_list_cell(env, make_h3idx(env, line[i]), list);
+    }
+    return list;
+}
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -708,6 +735,7 @@ static ErlNifFunc nif_funcs[] =
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
      {"get_res0_indexes", 0, erl_get_res0_indexes, 0}};
+     {"line", 2, erl_h3line, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

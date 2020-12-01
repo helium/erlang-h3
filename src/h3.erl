@@ -25,7 +25,8 @@
          indices_are_neighbors/2,
          get_unidirectional_edge/2,
          grid_distance/2,
-         get_res0_indexes/0
+         get_res0_indexes/0,
+         line/2
         ]).
 
 -on_load(init/0).
@@ -179,6 +180,11 @@ get_unidirectional_edge(_, _) ->
 %% @doc Returns all h3 indexes at resolution 0.
 -spec get_res0_indexes() -> [h3index(),...].
 get_res0_indexes() ->
+    not_loaded(?LINE).
+
+%% @doc Returns all h3 indexes between Start and End.
+-spec line(Start :: h3index(), End :: h3index()) -> [h3index(),...].
+line(_Start, _End) ->
     not_loaded(?LINE).
 
 init() ->
