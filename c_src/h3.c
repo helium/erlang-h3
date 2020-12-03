@@ -666,6 +666,21 @@ erl_get_unidirectional_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[]
     return make_h3idx(env, h3idx);
 }
 
+static ERL_NIF_TERM
+erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int res0count = res0IndexCount();
+    H3Index res0[res0count];
+    getRes0Indexes(res0);
+
+    ERL_NIF_TERM list = enif_make_list(env, 0);
+    for (int i = res0count - 1; i >= 0; i--)
+    {
+        list = enif_make_list_cell(env, make_h3idx(env, res0[i]), list);
+    }
+    return list;
+}
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -691,7 +706,8 @@ static ErlNifFunc nif_funcs[] =
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
-     {"grid_distance", 2, erl_grid_distance, 0}};
+     {"grid_distance", 2, erl_grid_distance, 0},
+     {"get_res0_indexes", 0, erl_get_res0_indexes, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \
