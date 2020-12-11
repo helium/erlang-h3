@@ -734,8 +734,9 @@ static ErlNifFunc nif_funcs[] =
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
-     {"get_res0_indexes", 0, erl_get_res0_indexes, 0}};
-     {"line", 2, erl_h3line, 0}};
+     {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
+     {"line", 2, erl_h3line, 0}
+    };
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

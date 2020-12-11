@@ -182,7 +182,8 @@ get_unidirectional_edge(_, _) ->
 get_res0_indexes() ->
     not_loaded(?LINE).
 
-%% @doc Returns all h3 indexes between Start and End.
+%% @doc Returns all h3 indexes between Start and End (inclusive both)
+%% only if Start and End have the same resolution, empty list otherwise.
 -spec line(Start :: h3index(), End :: h3index()) -> [h3index(),...].
 line(_Start, _End) ->
     not_loaded(?LINE).

@@ -21,7 +21,8 @@
          compact_roundtrip_test/1,
          parent_test/1,
          grid_distance_test/1,
-         res0_test/1
+         res0_test/1,
+         line_test/1
         ]).
 
 all() ->
@@ -41,7 +42,8 @@ all() ->
      compact_roundtrip_test,
      parent_test,
      grid_distance_test,
-     res0_test
+     res0_test,
+     line_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -194,3 +196,13 @@ grid_distance_test(_Config) ->
 
 res0_test(_Config) ->
     ?assertEqual(122, length(h3:get_res0_indexes())).
+
+line_test(_Config) ->
+    Start = 631210968611854847,
+    End = 631210971009437183,
+    Result = h3:line(631210968611854847, 631210971009437183),
+    ?assertEqual(169, length(Result)),
+    ?assertEqual(lists:sort(static_line_result:known()), lists:sort(Result)),
+    ?assert(lists:member(Start, Result)),
+    ?assert(lists:member(End, Result)),
+    ok.
