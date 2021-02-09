@@ -31,7 +31,7 @@ free_geo_fence(Geofence * gf)
     }
     if (gf->verts != NULL)
     {
-        (void)enif_free((void *)gf->verts);
+        enif_free(gf->verts);
         gf->verts = NULL;
     }
     gf->numVerts = 0;
@@ -40,19 +40,18 @@ free_geo_fence(Geofence * gf)
 static void
 free_geo_polygon(GeoPolygon * gp)
 {
-    int i;
     if (gp == NULL)
     {
         return;
     }
-    (void)free_geo_fence(&gp->geofence);
+    free_geo_fence(&gp->geofence);
     if (gp->holes != NULL)
     {
-        for (i = 0; i < gp->numHoles; i++)
+        for (int i = 0; i < gp->numHoles; i++)
         {
-            (void)free_geo_fence(&gp->holes[i]);
+            free_geo_fence(&gp->holes[i]);
         }
-        (void)enif_free(gp->holes);
+        enif_free(gp->holes);
         gp->holes = NULL;
     }
     gp->numHoles = 0;
@@ -109,7 +108,7 @@ get_geo_fence(ErlNifEnv * env, ERL_NIF_TERM term, Geofence * gf)
     {
         return false;
     }
-    gf->verts = (void *)enif_alloc(sizeof(GeoCoord) * gf->numVerts);
+    gf->verts = enif_alloc(sizeof(GeoCoord) * gf->numVerts);
     if (gf->verts == NULL)
     {
         return false;
@@ -120,7 +119,7 @@ get_geo_fence(ErlNifEnv * env, ERL_NIF_TERM term, Geofence * gf)
     {
         if (!get_geo_coord(env, head, gc))
         {
-            (void)free_geo_fence(gf);
+            free_geo_fence(gf);
             return false;
         }
         gc++;
@@ -151,10 +150,10 @@ get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
         gp->holes = NULL;
         return true;
     }
-    gp->holes = (void *)enif_alloc(sizeof(Geofence *) * gp->numHoles);
+    gp->holes = enif_alloc(sizeof(Geofence *) * gp->numHoles);
     if (gp->holes == NULL)
     {
-        (void)free_geo_polygon(gp);
+        free_geo_polygon(gp);
         return false;
     }
     gf = gp->holes;
@@ -162,7 +161,7 @@ get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
     {
         if (!get_geo_fence(env, head, gf))
         {
-            (void)free_geo_polygon(gp);
+            free_geo_polygon(gp);
             return false;
         }
         gf++;
@@ -802,7 +801,7 @@ erl_max_polyfill_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
     result = maxPolyfillSize(&polygon, resolution);
-    (void)free_geo_polygon(&polygon);
+    free_geo_polygon(&polygon);
     return enif_make_int(env, result);
 }
 
@@ -824,13 +823,13 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
     polyfillsize = maxPolyfillSize(&polygon, resolution);
-    h3indices    = (void *)calloc(polyfillsize, sizeof(H3Index));
+    h3indices    = calloc(polyfillsize, sizeof(H3Index));
     if (h3indices == NULL)
     {
-        (void)free_geo_polygon(&polygon);
+        free_geo_polygon(&polygon);
         return enif_make_badarg(env);
     }
-    (void)polyfill(&polygon, resolution, h3indices);
+    polyfill(&polygon, resolution, h3indices);
     list = enif_make_list(env, 0);
     for (i = polyfillsize - 1; i >= 0; i--)
     {
@@ -839,8 +838,8 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
             list = enif_make_list_cell(env, make_h3idx(env, h3indices[i]), list);
         }
     }
-    (void)free(h3indices);
-    (void)free_geo_polygon(&polygon);
+    free(h3indices);
+    free_geo_polygon(&polygon);
     return list;
 }
 
@@ -862,7 +861,7 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    h3Set = (void *)calloc(len, sizeof(H3Index));
+    h3Set = calloc(len, sizeof(H3Index));
     if (h3Set == NULL)
     {
         return enif_make_badarg(env);
@@ -870,11 +869,11 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (!get_h3indexes(env, argv[0], h3Set, len))
     {
-        (void)free(h3Set);
+        free(h3Set);
         return enif_make_badarg(env);
     }
 
-    (void)h3SetToLinkedGeo(h3Set, (int)len, &out);
+    h3SetToLinkedGeo(h3Set, (int)len, &out);
 
     polygon_list = enif_make_list(env, 0);
     polygon      = &out;
@@ -901,8 +900,8 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         polygon      = polygon->next;
     }
 
-    (void)destroyLinkedPolygon(&out);
-    (void)free(h3Set);
+    destroyLinkedPolygon(&out);
+    free(h3Set);
 
     return polygon_list;
 }
