@@ -28,7 +28,8 @@
          get_res0_indexes/0,
          polyfill/2,
          max_polyfill_size/2,
-         set_to_multi_polygon/1
+         set_to_multi_polygon/1,
+         meminfo/0
         ]).
 
 -on_load(init/0).
@@ -201,6 +202,10 @@ max_polyfill_size(_, _) ->
 %% of a set of hexagons.
 -spec set_to_multi_polygon([h3index(),...]) -> [polygon()].
 set_to_multi_polygon(_) ->
+    not_loaded(?LINE).
+
+%% @doc Returns a map of nif and libh3 memory allocation statistics.
+meminfo() ->
     not_loaded(?LINE).
 
 init() ->

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-#include "erl_nif.h"
-#include "h3api.h"
+#include "h3_nif_memory.h"
+#include <erl_nif.h>
+#include <h3api.h>
 #include <stdbool.h>
-#include <string.h>
+#include <stddef.h>
+#include <stdint.h>
 
 static ERL_NIF_TERM ATOM_TRUE;
 static ERL_NIF_TERM ATOM_FALSE;
@@ -31,7 +33,7 @@ free_geo_fence(Geofence * gf)
     }
     if (gf->verts != NULL)
     {
-        enif_free(gf->verts);
+        h3_nif_free(gf->verts);
         gf->verts = NULL;
     }
     gf->numVerts = 0;
@@ -51,7 +53,7 @@ free_geo_polygon(GeoPolygon * gp)
         {
             free_geo_fence(&gp->holes[i]);
         }
-        enif_free(gp->holes);
+        h3_nif_free(gp->holes);
         gp->holes = NULL;
     }
     gp->numHoles = 0;
@@ -108,7 +110,7 @@ get_geo_fence(ErlNifEnv * env, ERL_NIF_TERM term, Geofence * gf)
     {
         return false;
     }
-    gf->verts = enif_alloc(sizeof(GeoCoord) * gf->numVerts);
+    gf->verts = h3_nif_calloc(gf->numVerts, sizeof(GeoCoord));
     if (gf->verts == NULL)
     {
         return false;
@@ -150,7 +152,7 @@ get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
         gp->holes = NULL;
         return true;
     }
-    gp->holes = enif_alloc(sizeof(Geofence *) * gp->numHoles);
+    gp->holes = h3_nif_calloc(gp->numHoles, sizeof(Geofence *));
     if (gp->holes == NULL)
     {
         free_geo_polygon(gp);
@@ -444,7 +446,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     int childcount = maxH3ToChildrenSize(h3idx, res);
 
-    H3Index * children = calloc(childcount, sizeof(H3Index));
+    H3Index * children = h3_nif_calloc(childcount, sizeof(H3Index));
 
     if (children == NULL)
     {
@@ -458,7 +460,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         list = enif_make_list_cell(env, make_h3idx(env, children[i]), list);
     }
-    free(children);
+    h3_nif_free(children);
     return list;
 }
 
@@ -478,7 +480,7 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int       kringsize = maxKringSize(k);
-    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
+    H3Index * h3indices = h3_nif_calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
@@ -498,7 +500,7 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         }
     }
 
-    free(h3indices);
+    h3_nif_free(h3indices);
     return list;
 }
 
@@ -518,18 +520,18 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int       kringsize = maxKringSize(k);
-    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
+    H3Index * h3indices = h3_nif_calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
         return enif_make_badarg(env);
     }
 
-    int * h3distances = calloc(kringsize, sizeof(int));
+    int * h3distances = h3_nif_calloc(kringsize, sizeof(int));
 
     if (h3distances == NULL)
     {
-        free(h3indices);
+        h3_nif_free(h3indices);
         return enif_make_badarg(env);
     }
 
@@ -550,8 +552,8 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         }
     }
 
-    free(h3indices);
-    free(h3distances);
+    h3_nif_free(h3indices);
+    h3_nif_free(h3distances);
     return list;
 }
 
@@ -616,7 +618,7 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    H3Index * in_indices = calloc(len, sizeof(H3Index));
+    H3Index * in_indices = h3_nif_calloc(len, sizeof(H3Index));
     if (in_indices == NULL)
     {
         return enif_make_badarg(env);
@@ -624,31 +626,31 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (!get_h3indexes(env, argv[0], in_indices, len))
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
-    H3Index * out_indices = calloc(len, sizeof(H3Index));
+    H3Index * out_indices = h3_nif_calloc(len, sizeof(H3Index));
     if (out_indices == NULL)
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
 
     if (compact(in_indices, out_indices, len) != 0)
     {
-        free(in_indices);
-        free(out_indices);
+        h3_nif_free(in_indices);
+        h3_nif_free(out_indices);
         return enif_make_badarg(env);
     }
 
     // Done with in_indices
-    free(in_indices);
+    h3_nif_free(in_indices);
 
     ERL_NIF_TERM list = make_h3indexes(env, out_indices, len);
 
-    free(out_indices);
+    h3_nif_free(out_indices);
     return list;
 }
 
@@ -667,7 +669,7 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    H3Index * in_indices = calloc(in_len, sizeof(H3Index));
+    H3Index * in_indices = h3_nif_calloc(in_len, sizeof(H3Index));
     if (in_indices == NULL)
     {
         return enif_make_badarg(env);
@@ -675,31 +677,31 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (!get_h3indexes(env, argv[0], in_indices, in_len))
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
     unsigned  out_len     = maxUncompactSize(in_indices, in_len, res);
-    H3Index * out_indices = calloc(out_len, sizeof(H3Index));
+    H3Index * out_indices = h3_nif_calloc(out_len, sizeof(H3Index));
     if (out_indices == NULL)
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
     if (uncompact(in_indices, in_len, out_indices, out_len, res) != 0)
     {
-        free(in_indices);
-        free(out_indices);
+        h3_nif_free(in_indices);
+        h3_nif_free(out_indices);
         return enif_make_badarg(env);
     }
 
     // Done with in_indices
-    free(in_indices);
+    h3_nif_free(in_indices);
 
     ERL_NIF_TERM list = make_h3indexes(env, out_indices, out_len);
 
-    free(out_indices);
+    h3_nif_free(out_indices);
     return list;
 }
 
@@ -823,7 +825,7 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
     polyfillsize = maxPolyfillSize(&polygon, resolution);
-    h3indices    = calloc(polyfillsize, sizeof(H3Index));
+    h3indices    = h3_nif_calloc(polyfillsize, sizeof(H3Index));
     if (h3indices == NULL)
     {
         free_geo_polygon(&polygon);
@@ -838,7 +840,7 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
             list = enif_make_list_cell(env, make_h3idx(env, h3indices[i]), list);
         }
     }
-    free(h3indices);
+    h3_nif_free(h3indices);
     free_geo_polygon(&polygon);
     return list;
 }
@@ -861,7 +863,7 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    h3Set = calloc(len, sizeof(H3Index));
+    h3Set = h3_nif_calloc(len, sizeof(H3Index));
     if (h3Set == NULL)
     {
         return enif_make_badarg(env);
@@ -869,7 +871,7 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (!get_h3indexes(env, argv[0], h3Set, len))
     {
-        free(h3Set);
+        h3_nif_free(h3Set);
         return enif_make_badarg(env);
     }
 
@@ -901,7 +903,7 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     destroyLinkedPolygon(&out);
-    free(h3Set);
+    h3_nif_free(h3Set);
 
     return polygon_list;
 }
@@ -935,7 +937,8 @@ static ErlNifFunc nif_funcs[] =
      {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
      {"polyfill", 2, erl_polyfill, 0},
      {"max_polyfill_size", 2, erl_max_polyfill_size, 0},
-     {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0}};
+     {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0},
+     {"meminfo", 0, erl_meminfo, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \
