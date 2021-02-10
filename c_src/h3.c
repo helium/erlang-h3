@@ -789,25 +789,6 @@ erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static ERL_NIF_TERM
-erl_max_polyfill_size(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
-{
-    int        resolution;
-    GeoPolygon polygon;
-    int        result;
-    if (argc != 2 || !get_resolution(env, argv[1], &resolution))
-    {
-        return enif_make_badarg(env);
-    }
-    if (!get_geo_polygon(env, argv[0], &polygon))
-    {
-        return enif_make_badarg(env);
-    }
-    result = maxPolyfillSize(&polygon, resolution);
-    free_geo_polygon(&polygon);
-    return enif_make_int(env, result);
-}
-
-static ERL_NIF_TERM
 erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     int          resolution;
@@ -935,8 +916,7 @@ static ErlNifFunc nif_funcs[] =
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
      {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
-     {"polyfill", 2, erl_polyfill, 0},
-     {"max_polyfill_size", 2, erl_max_polyfill_size, 0},
+     {"polyfill", 2, erl_polyfill, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0},
      {"meminfo", 0, erl_meminfo, 0}};
 

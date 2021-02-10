@@ -27,7 +27,6 @@
          grid_distance/2,
          get_res0_indexes/0,
          polyfill/2,
-         max_polyfill_size/2,
          set_to_multi_polygon/1,
          meminfo/0
         ]).
@@ -190,12 +189,6 @@ get_res0_indexes() ->
 %% hexagons that are contained by it.
 -spec polyfill(polygon(), resolution()) -> [h3index(),...].
 polyfill(_, _) ->
-    not_loaded(?LINE).
-
-%% @doc Returns the number of hexagons to allocate space for when
-%% performing a polyfill on the given GeoJSON-like data structure.
--spec max_polyfill_size(polygon(), resolution()) -> non_neg_integer().
-max_polyfill_size(_, _) ->
     not_loaded(?LINE).
 
 %% @doc Returns a GeoJSON-like MultiPolygon describing the outline(s)
