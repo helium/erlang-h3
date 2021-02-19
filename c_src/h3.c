@@ -20,9 +20,39 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 static ERL_NIF_TERM ATOM_TRUE;
 static ERL_NIF_TERM ATOM_FALSE;
+
+/** Comparison function for used by `h3set_sort()`.
+ *
+ * The comparison logic such that low resolution (large surface area)
+ * indices moved to the beginning of the array. Having large hexagons
+ * at the front increase the change of finding an overlap when
+ * searching with a lower resolution (smaller) child. Indices with
+ * identical resolution compare equal, and their ordering with a block
+ * same-resolution indices is not specified.
+ */
+static int
+h3set_sort_compare_fun(void const * lhp, void const * rhp)
+{
+    H3Index lhs     = *(H3Index *)lhp;
+    int     lhs_res = h3GetResolution(lhs);
+    H3Index rhs     = *(H3Index *)rhp;
+    int     rhs_res = h3GetResolution(rhs);
+    return rhs_res - lhs_res;
+}
+
+/** Sorts an array H3 indices in increasing resolution order.
+ *
+ * See docs for the accompanying comparison function.
+ */
+static void
+h3set_sort(H3Index * set, size_t set_len)
+{
+    qsort(set, set_len, sizeof(H3Index), h3set_sort_compare_fun);
+}
 
 static void
 free_geo_fence(Geofence * gf)
@@ -647,6 +677,10 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     // Done with in_indices
     h3_nif_free(in_indices);
+
+    // Sort indices increasing resolution order (largest area to
+    // lowest area).
+    h3set_sort(out_indices, len);
 
     ERL_NIF_TERM list = make_h3indexes(env, out_indices, len);
 
