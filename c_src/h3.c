@@ -923,6 +923,50 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     return polygon_list;
 }
 
+static ERL_NIF_TERM
+erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    H3Index key = 0;
+
+    if (argc != 2 || !get_h3idx(env, argv[0], &key)
+        || !enif_is_list(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int          key_res = h3GetResolution(key);
+    int          n       = 0;
+    ERL_NIF_TERM list    = argv[1];
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+
+    while (enif_get_list_cell(env, list, &head, &tail))
+    {
+        H3Index idx;
+        if (!get_h3idx(env, head, &idx))
+        {
+            return enif_make_badarg(env);
+        }
+
+        if (idx == key)
+        {
+            return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
+        }
+
+        int idx_res = h3GetResolution(idx);
+
+        if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+        {
+            return enif_make_tuple2(env, ATOM_TRUE, head);
+        }
+
+        list = tail;
+        n++;
+    }
+
+    return ATOM_FALSE;
+}
+
 static ErlNifFunc nif_funcs[] =
     {{"num_hexagons", 1, erl_num_hexagons, 0},
      {"edge_length_meters", 1, erl_edge_length_meters, 0},
@@ -942,7 +986,7 @@ static ErlNifFunc nif_funcs[] =
      {"parent", 2, erl_parent, 0},
      {"children", 2, erl_children, 0},
      {"compact", 1, erl_compact, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-     {"uncompact", 2, erl_uncompact, 0},
+     {"uncompact", 2, erl_uncompact, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"k_ring", 2, erl_k_ring, 0},
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
@@ -952,6 +996,7 @@ static ErlNifFunc nif_funcs[] =
      {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
      {"polyfill", 2, erl_polyfill, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0},
+     {"contains", 2, erl_contains, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"meminfo", 0, erl_meminfo, 0}};
 
 #define ATOM(Id, Value)                                                        \

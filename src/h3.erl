@@ -28,6 +28,7 @@
          get_res0_indexes/0,
          polyfill/2,
          set_to_multi_polygon/1,
+         contains/2,
          meminfo/0
         ]).
 
@@ -199,6 +200,16 @@ set_to_multi_polygon(_) ->
 
 %% @doc Returns a map of nif and libh3 memory allocation statistics.
 meminfo() ->
+    not_loaded(?LINE).
+
+%% @doc Check if a list of H3 indices completely encompasses a target
+%% index.
+%%
+%% Returns `{true, Index}' if the target is covered as the returned
+%% `Index' may be a parent to `Target'. Returns `false' is `Target' is
+%% not covered.
+-spec contains(_Target::h3index(), _Set::[h3index(),...]) -> false | {true, h3index()}.
+contains(_Target, _Set) ->
     not_loaded(?LINE).
 
 init() ->
