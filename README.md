@@ -10,10 +10,10 @@ H3](https://uber.github.io/h3) spatial coordinate library.
 Install
 ------
 
-Add `erlang-h3` to your `deps` section in `rebar.config`:
+Add `h3` to your `deps` section in `rebar.config`:
 
 ``` shell
-{deps, [erlang-h3]}.
+{deps, [h3]}.
 ```
 
 Building
