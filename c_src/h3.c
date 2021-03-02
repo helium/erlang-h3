@@ -685,14 +685,17 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                                                      ERL_NIF_LATIN1));
     }
 
-
-    if (compact(in_indices, out_indices, len) != 0)
+    int res = compact(in_indices, out_indices, len);
+    if (res)
     {
         h3_nif_free(in_indices);
         h3_nif_free(out_indices);
-        return enif_raise_exception(
-            env,
-            enif_make_string(env, "compact() returned non-zero", ERL_NIF_LATIN1));
+
+        ERL_NIF_TERM exception_msg =
+            enif_make_string(env, "libh3 compact() returned", ERL_NIF_LATIN1);
+        ERL_NIF_TERM h3_err = enif_make_int(env, res);
+        return enif_raise_exception(env,
+                                    enif_make_tuple2(env, exception_msg, h3_err));
     }
 
     // Done with in_indices
