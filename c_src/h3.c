@@ -480,7 +480,10 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (children == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     h3ToChildren(h3idx, res, children);
@@ -514,7 +517,10 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (h3indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     kRing(h3idx, k, h3indices);
@@ -554,7 +560,10 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     if (h3indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     int * h3distances = h3_nif_calloc(kringsize, sizeof(int));
@@ -562,7 +571,10 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     if (h3distances == NULL)
     {
         h3_nif_free(h3indices);
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     kRingDistances(h3idx, k, h3indices, h3distances);
@@ -651,7 +663,10 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     H3Index * in_indices = h3_nif_calloc(len, sizeof(H3Index));
     if (in_indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (!get_h3indexes(env, argv[0], in_indices, len))
@@ -664,7 +679,10 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     if (out_indices == NULL)
     {
         h3_nif_free(in_indices);
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
 
@@ -672,7 +690,9 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         h3_nif_free(in_indices);
         h3_nif_free(out_indices);
-        return enif_make_badarg(env);
+        return enif_raise_exception(
+            env,
+            enif_make_string(env, "compact() returned non-zero", ERL_NIF_LATIN1));
     }
 
     // Done with in_indices
@@ -706,7 +726,10 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     H3Index * in_indices = h3_nif_calloc(in_len, sizeof(H3Index));
     if (in_indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (!get_h3indexes(env, argv[0], in_indices, in_len))
@@ -720,7 +743,10 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     if (out_indices == NULL)
     {
         h3_nif_free(in_indices);
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (uncompact(in_indices, in_len, out_indices, out_len, res) != 0)
@@ -844,7 +870,10 @@ erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     if (h3indices == NULL)
     {
         free_geo_polygon(&polygon);
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
     polyfill(&polygon, resolution, h3indices);
     list = enif_make_list(env, 0);
@@ -881,7 +910,10 @@ erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     h3Set = h3_nif_calloc(len, sizeof(H3Index));
     if (h3Set == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (!get_h3indexes(env, argv[0], h3Set, len))
