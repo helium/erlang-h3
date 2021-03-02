@@ -64,12 +64,10 @@ if(CMAKE_VERSION VERSION_GREATER 3.9)
   if(CPPCHECK)
     message(STATUS "Found cppcheck: ${CPPCHECK}")
     set(CMAKE_C_CPPCHECK ${CPPCHECK}
-      --enable=all
       --inline-suppr
       --inconclusive
       --quiet
       --std=c${CMAKE_C_STANDARD}
-      --suppress=missingInclude
       --template=gcc
       )
   endif(CPPCHECK)
@@ -92,11 +90,22 @@ endif()
 ##########################################################################
 find_package(Erlang REQUIRED)
 find_package(H3 REQUIRED)
-add_library(h3 MODULE h3.c)
+add_library(h3
+  MODULE
+  h3.c
+  h3_nif_memory.c
+  )
 target_link_libraries(h3
   PRIVATE
   Erlang::Erlang
   H3::H3
   )
+
+if(NOT ${CMAKE_BUILD_TYPE} MATCHES "ASan")
+  target_compile_definitions(h3
+    PRIVATE
+    H3_NIF_USE_BEAM_ALLOC
+    )
+endif()
 
 install(TARGETS h3 DESTINATION ${CMAKE_SOURCE_DIR}/../priv)

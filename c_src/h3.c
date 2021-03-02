@@ -14,14 +14,80 @@
  * limitations under the License.
  */
 
-#include "erl_nif.h"
-#include "h3api.h"
+#include "h3_nif_memory.h"
+#include <erl_nif.h>
+#include <h3api.h>
 #include <stdbool.h>
-#include <string.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 static ERL_NIF_TERM ATOM_TRUE;
 static ERL_NIF_TERM ATOM_FALSE;
 
+/** Comparison function for used by `h3set_sort()`.
+ *
+ * The comparison logic such that low resolution (large surface area)
+ * indices moved to the beginning of the array. Having large hexagons
+ * at the front increase the change of finding an overlap when
+ * searching with a lower resolution (smaller) child. Indices with
+ * identical resolution compare equal, and their ordering with a block
+ * same-resolution indices is not specified.
+ */
+static int
+h3set_sort_compare_fun(void const * lhp, void const * rhp)
+{
+    H3Index lhs     = *(H3Index *)lhp;
+    int     lhs_res = h3GetResolution(lhs);
+    H3Index rhs     = *(H3Index *)rhp;
+    int     rhs_res = h3GetResolution(rhs);
+    return rhs_res - lhs_res;
+}
+
+/** Sorts an array H3 indices in increasing resolution order.
+ *
+ * See docs for the accompanying comparison function.
+ */
+static void
+h3set_sort(H3Index * set, size_t set_len)
+{
+    qsort(set, set_len, sizeof(H3Index), h3set_sort_compare_fun);
+}
+
+static void
+free_geo_fence(Geofence * gf)
+{
+    if (gf == NULL)
+    {
+        return;
+    }
+    if (gf->verts != NULL)
+    {
+        h3_nif_free(gf->verts);
+        gf->verts = NULL;
+    }
+    gf->numVerts = 0;
+}
+
+static void
+free_geo_polygon(GeoPolygon * gp)
+{
+    if (gp == NULL)
+    {
+        return;
+    }
+    free_geo_fence(&gp->geofence);
+    if (gp->holes != NULL)
+    {
+        for (int i = 0; i < gp->numHoles; i++)
+        {
+            free_geo_fence(&gp->holes[i]);
+        }
+        h3_nif_free(gp->holes);
+        gp->holes = NULL;
+    }
+    gp->numHoles = 0;
+}
 
 static bool
 get_h3idx(ErlNifEnv * env, ERL_NIF_TERM term, H3Index * dest)
@@ -63,16 +129,87 @@ get_geo_coord(ErlNifEnv * env, ERL_NIF_TERM term, GeoCoord * dest)
     return true;
 }
 
+static bool
+get_geo_fence(ErlNifEnv * env, ERL_NIF_TERM term, Geofence * gf)
+{
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+    GeoCoord *   gc = NULL;
+    if (gf == NULL || !enif_get_list_length(env, term, (unsigned *)&gf->numVerts)
+        || gf->numVerts < 1)
+    {
+        return false;
+    }
+    gf->verts = h3_nif_calloc(gf->numVerts, sizeof(GeoCoord));
+    if (gf->verts == NULL)
+    {
+        return false;
+    }
+    gc   = gf->verts;
+    tail = term;
+    while (enif_get_list_cell(env, tail, &head, &tail) != 0)
+    {
+        if (!get_geo_coord(env, head, gc))
+        {
+            free_geo_fence(gf);
+            return false;
+        }
+        gc++;
+    }
+    return true;
+}
+
+static bool
+get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
+{
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+    Geofence *   gf = NULL;
+    if (gp == NULL || !enif_get_list_length(env, term, (unsigned *)&gp->numHoles)
+        || gp->numHoles < 1)
+    {
+        return false;
+    }
+    gp->numHoles -= 1;
+    tail = term;
+    if (!enif_get_list_cell(env, term, &head, &tail)
+        || !get_geo_fence(env, head, &gp->geofence))
+    {
+        return false;
+    }
+    if (gp->numHoles == 0)
+    {
+        gp->holes = NULL;
+        return true;
+    }
+    gp->holes = h3_nif_calloc(gp->numHoles, sizeof(Geofence *));
+    if (gp->holes == NULL)
+    {
+        free_geo_polygon(gp);
+        return false;
+    }
+    gf = gp->holes;
+    while (enif_get_list_cell(env, tail, &head, &tail))
+    {
+        if (!get_geo_fence(env, head, gf))
+        {
+            free_geo_polygon(gp);
+            return false;
+        }
+        gf++;
+    }
+    return true;
+}
+
 static ERL_NIF_TERM
 make_geo_coord(ErlNifEnv * env, GeoCoord * coord)
 {
     double lat = radsToDegs(coord->lat);
     double lon = radsToDegs(coord->lon);
 
-    return enif_make_tuple2(
-        env,
-        enif_make_double(env, lat > 90 ? lat - 180 : lat),
-        enif_make_double(env, lon > 180 ? lon - 360 : lon));
+    return enif_make_tuple2(env,
+                            enif_make_double(env, lat > 90 ? lat - 180 : lat),
+                            enif_make_double(env, lon > 180 ? lon - 360 : lon));
 }
 
 static bool
@@ -339,11 +476,14 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     int childcount = maxH3ToChildrenSize(h3idx, res);
 
-    H3Index * children = calloc(childcount, sizeof(H3Index));
+    H3Index * children = h3_nif_calloc(childcount, sizeof(H3Index));
 
     if (children == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     h3ToChildren(h3idx, res, children);
@@ -353,7 +493,7 @@ erl_children(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     {
         list = enif_make_list_cell(env, make_h3idx(env, children[i]), list);
     }
-    free(children);
+    h3_nif_free(children);
     return list;
 }
 
@@ -373,11 +513,14 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int       kringsize = maxKringSize(k);
-    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
+    H3Index * h3indices = h3_nif_calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     kRing(h3idx, k, h3indices);
@@ -393,7 +536,7 @@ erl_k_ring(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         }
     }
 
-    free(h3indices);
+    h3_nif_free(h3indices);
     return list;
 }
 
@@ -413,19 +556,25 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
     }
 
     int       kringsize = maxKringSize(k);
-    H3Index * h3indices = calloc(kringsize, sizeof(H3Index));
+    H3Index * h3indices = h3_nif_calloc(kringsize, sizeof(H3Index));
 
     if (h3indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
-    int * h3distances = calloc(kringsize, sizeof(int));
+    int * h3distances = h3_nif_calloc(kringsize, sizeof(int));
 
     if (h3distances == NULL)
     {
-        free(h3indices);
-        return enif_make_badarg(env);
+        h3_nif_free(h3indices);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     kRingDistances(h3idx, k, h3indices, h3distances);
@@ -445,8 +594,8 @@ erl_k_ring_distances(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         }
     }
 
-    free(h3indices);
-    free(h3distances);
+    h3_nif_free(h3indices);
+    h3_nif_free(h3distances);
     return list;
 }
 
@@ -511,39 +660,54 @@ erl_compact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    H3Index * in_indices = calloc(len, sizeof(H3Index));
+    H3Index * in_indices = h3_nif_calloc(len, sizeof(H3Index));
     if (in_indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (!get_h3indexes(env, argv[0], in_indices, len))
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
-    H3Index * out_indices = calloc(len, sizeof(H3Index));
+    H3Index * out_indices = h3_nif_calloc(len, sizeof(H3Index));
     if (out_indices == NULL)
     {
-        free(in_indices);
-        return enif_make_badarg(env);
+        h3_nif_free(in_indices);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
-
-    if (compact(in_indices, out_indices, len) != 0)
+    int res = compact(in_indices, out_indices, len);
+    if (res)
     {
-        free(in_indices);
-        free(out_indices);
-        return enif_make_badarg(env);
+        h3_nif_free(in_indices);
+        h3_nif_free(out_indices);
+
+        ERL_NIF_TERM exception_msg =
+            enif_make_string(env, "libh3 compact() returned", ERL_NIF_LATIN1);
+        ERL_NIF_TERM h3_err = enif_make_int(env, res);
+        return enif_raise_exception(env,
+                                    enif_make_tuple2(env, exception_msg, h3_err));
     }
 
     // Done with in_indices
-    free(in_indices);
+    h3_nif_free(in_indices);
+
+    // Sort indices increasing resolution order (largest area to
+    // lowest area).
+    h3set_sort(out_indices, len);
 
     ERL_NIF_TERM list = make_h3indexes(env, out_indices, len);
 
-    free(out_indices);
+    h3_nif_free(out_indices);
     return list;
 }
 
@@ -562,39 +726,45 @@ erl_uncompact(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    H3Index * in_indices = calloc(in_len, sizeof(H3Index));
+    H3Index * in_indices = h3_nif_calloc(in_len, sizeof(H3Index));
     if (in_indices == NULL)
     {
-        return enif_make_badarg(env);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (!get_h3indexes(env, argv[0], in_indices, in_len))
     {
-        free(in_indices);
+        h3_nif_free(in_indices);
         return enif_make_badarg(env);
     }
 
     unsigned  out_len     = maxUncompactSize(in_indices, in_len, res);
-    H3Index * out_indices = calloc(out_len, sizeof(H3Index));
+    H3Index * out_indices = h3_nif_calloc(out_len, sizeof(H3Index));
     if (out_indices == NULL)
     {
-        free(in_indices);
-        return enif_make_badarg(env);
+        h3_nif_free(in_indices);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
     }
 
     if (uncompact(in_indices, in_len, out_indices, out_len, res) != 0)
     {
-        free(in_indices);
-        free(out_indices);
+        h3_nif_free(in_indices);
+        h3_nif_free(out_indices);
         return enif_make_badarg(env);
     }
 
     // Done with in_indices
-    free(in_indices);
+    h3_nif_free(in_indices);
 
     ERL_NIF_TERM list = make_h3indexes(env, out_indices, out_len);
 
-    free(out_indices);
+    h3_nif_free(out_indices);
     return list;
 }
 
@@ -669,7 +839,7 @@ erl_get_unidirectional_edge(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[]
 static ERL_NIF_TERM
 erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
-    int res0count = res0IndexCount();
+    int     res0count = res0IndexCount();
     H3Index res0[res0count];
     getRes0Indexes(res0);
 
@@ -679,6 +849,157 @@ erl_get_res0_indexes(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
         list = enif_make_list_cell(env, make_h3idx(env, res0[i]), list);
     }
     return list;
+}
+
+static ERL_NIF_TERM
+erl_polyfill(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    int          resolution;
+    GeoPolygon   polygon;
+    int          polyfillsize;
+    H3Index *    h3indices = NULL;
+    ERL_NIF_TERM list;
+    int          i;
+    if (argc != 2 || !get_resolution(env, argv[1], &resolution))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!get_geo_polygon(env, argv[0], &polygon))
+    {
+        return enif_make_badarg(env);
+    }
+    polyfillsize = maxPolyfillSize(&polygon, resolution);
+    h3indices    = h3_nif_calloc(polyfillsize, sizeof(H3Index));
+    if (h3indices == NULL)
+    {
+        free_geo_polygon(&polygon);
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
+    }
+    polyfill(&polygon, resolution, h3indices);
+    list = enif_make_list(env, 0);
+    for (i = polyfillsize - 1; i >= 0; i--)
+    {
+        if (h3indices[i] != 0)
+        {
+            list = enif_make_list_cell(env, make_h3idx(env, h3indices[i]), list);
+        }
+    }
+    h3_nif_free(h3indices);
+    free_geo_polygon(&polygon);
+    return list;
+}
+
+static ERL_NIF_TERM
+erl_set_to_multi_polygon(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    unsigned           len;
+    H3Index *          h3Set = NULL;
+    LinkedGeoPolygon   out;
+    LinkedGeoPolygon * polygon = NULL;
+    LinkedGeoLoop *    loop    = NULL;
+    LinkedGeoCoord *   coord   = NULL;
+    ERL_NIF_TERM       polygon_list;
+    ERL_NIF_TERM       loop_list;
+    ERL_NIF_TERM       coord_list;
+
+    if (argc != 1 || !enif_get_list_length(env, argv[0], &len))
+    {
+        return enif_make_badarg(env);
+    }
+
+    h3Set = h3_nif_calloc(len, sizeof(H3Index));
+    if (h3Set == NULL)
+    {
+        return enif_raise_exception(env,
+                                    enif_make_string(env,
+                                                     "allocation",
+                                                     ERL_NIF_LATIN1));
+    }
+
+    if (!get_h3indexes(env, argv[0], h3Set, len))
+    {
+        h3_nif_free(h3Set);
+        return enif_make_badarg(env);
+    }
+
+    h3SetToLinkedGeo(h3Set, (int)len, &out);
+
+    polygon_list = enif_make_list(env, 0);
+    polygon      = &out;
+    while (polygon != NULL)
+    {
+        loop_list = enif_make_list(env, 0);
+        loop      = polygon->first;
+        while (loop != NULL)
+        {
+            coord_list = enif_make_list(env, 0);
+            coord      = loop->first;
+            while (coord != NULL)
+            {
+                coord_list =
+                    enif_make_list_cell(env,
+                                        make_geo_coord(env, &coord->vertex),
+                                        coord_list);
+                coord = coord->next;
+            }
+            loop_list = enif_make_list_cell(env, coord_list, loop_list);
+            loop      = loop->next;
+        }
+        polygon_list = enif_make_list_cell(env, loop_list, polygon_list);
+        polygon      = polygon->next;
+    }
+
+    destroyLinkedPolygon(&out);
+    h3_nif_free(h3Set);
+
+    return polygon_list;
+}
+
+static ERL_NIF_TERM
+erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
+{
+    H3Index key = 0;
+
+    if (argc != 2 || !get_h3idx(env, argv[0], &key)
+        || !enif_is_list(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+
+    int          key_res = h3GetResolution(key);
+    int          n       = 0;
+    ERL_NIF_TERM list    = argv[1];
+    ERL_NIF_TERM head;
+    ERL_NIF_TERM tail;
+
+    while (enif_get_list_cell(env, list, &head, &tail))
+    {
+        H3Index idx;
+        if (!get_h3idx(env, head, &idx))
+        {
+            return enif_make_badarg(env);
+        }
+
+        if (idx == key)
+        {
+            return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
+        }
+
+        int idx_res = h3GetResolution(idx);
+
+        if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+        {
+            return enif_make_tuple2(env, ATOM_TRUE, head);
+        }
+
+        list = tail;
+        n++;
+    }
+
+    return ATOM_FALSE;
 }
 
 static ErlNifFunc nif_funcs[] =
@@ -699,15 +1020,19 @@ static ErlNifFunc nif_funcs[] =
      {"is_pentagon", 1, erl_is_pentagon, 0},
      {"parent", 2, erl_parent, 0},
      {"children", 2, erl_children, 0},
-     {"compact", 1, erl_compact, 0},
-     {"uncompact", 2, erl_uncompact, 0},
+     {"compact", 1, erl_compact, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+     {"uncompact", 2, erl_uncompact, ERL_NIF_DIRTY_JOB_CPU_BOUND},
      {"k_ring", 2, erl_k_ring, 0},
      {"k_ring_distances", 2, erl_k_ring_distances, 0},
      {"max_k_ring_size", 1, erl_max_k_ring_size, 0},
      {"indices_are_neighbors", 2, erl_indices_are_neighbors, 0},
      {"get_unidirectional_edge", 2, erl_get_unidirectional_edge, 0},
      {"grid_distance", 2, erl_grid_distance, 0},
-     {"get_res0_indexes", 0, erl_get_res0_indexes, 0}};
+     {"get_res0_indexes", 0, erl_get_res0_indexes, 0},
+     {"polyfill", 2, erl_polyfill, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+     {"set_to_multi_polygon", 1, erl_set_to_multi_polygon, 0},
+     {"contains", 2, erl_contains, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+     {"meminfo", 0, erl_meminfo, 0}};
 
 #define ATOM(Id, Value)                                                        \
     {                                                                          \

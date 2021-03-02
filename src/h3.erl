@@ -25,7 +25,11 @@
          indices_are_neighbors/2,
          get_unidirectional_edge/2,
          grid_distance/2,
-         get_res0_indexes/0
+         get_res0_indexes/0,
+         polyfill/2,
+         set_to_multi_polygon/1,
+         contains/2,
+         meminfo/0
         ]).
 
 -on_load(init/0).
@@ -35,6 +39,7 @@
 
 -type coord() :: {float(), float()}.
 -type h3index() :: non_neg_integer().
+-type polygon() :: [[coord(),...],...].
 -type resolution() :: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15.
 
 -spec num_hexagons(resolution()) -> pos_integer().
@@ -179,6 +184,32 @@ get_unidirectional_edge(_, _) ->
 %% @doc Returns all h3 indexes at resolution 0.
 -spec get_res0_indexes() -> [h3index(),...].
 get_res0_indexes() ->
+    not_loaded(?LINE).
+
+%% @doc Takes a given GeoJSON-like polygon and fills it with the
+%% hexagons that are contained by it.
+-spec polyfill(polygon(), resolution()) -> [h3index(),...].
+polyfill(_, _) ->
+    not_loaded(?LINE).
+
+%% @doc Returns a GeoJSON-like MultiPolygon describing the outline(s)
+%% of a set of hexagons.
+-spec set_to_multi_polygon([h3index(),...]) -> [polygon()].
+set_to_multi_polygon(_) ->
+    not_loaded(?LINE).
+
+%% @doc Returns a map of nif and libh3 memory allocation statistics.
+meminfo() ->
+    not_loaded(?LINE).
+
+%% @doc Check if a list of H3 indices completely encompasses a target
+%% index.
+%%
+%% Returns `{true, Index}' if the target is covered as the returned
+%% `Index' may be a parent to `Target'. Returns `false' is `Target' is
+%% not covered.
+-spec contains(_Target::h3index(), _Set::[h3index(),...]) -> false | {true, h3index()}.
+contains(_Target, _Set) ->
     not_loaded(?LINE).
 
 init() ->

@@ -44,7 +44,8 @@ ExternalProject_Add(external-h3
                     -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS_${BUILD_TYPE_UC}}
                     -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS_${BUILD_TYPE_UC}}
                     -DCMAKE_TOOLCHAIN_FILE=$ENV{CMAKE_TOOLCHAIN_FILE}
-  )
+                    -DH3_ALLOC_PREFIX=libh3_
+                    )
 
 add_library(H3::H3 STATIC IMPORTED)
 set_target_properties(H3::H3
