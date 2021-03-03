@@ -182,7 +182,7 @@ get_geo_polygon(ErlNifEnv * env, ERL_NIF_TERM term, GeoPolygon * gp)
         gp->holes = NULL;
         return true;
     }
-    gp->holes = h3_nif_calloc(gp->numHoles, sizeof(Geofence *));
+    gp->holes = h3_nif_calloc(gp->numHoles, sizeof(Geofence));
     if (gp->holes == NULL)
     {
         free_geo_polygon(gp);
