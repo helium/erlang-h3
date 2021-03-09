@@ -202,13 +202,16 @@ set_to_multi_polygon(_) ->
 meminfo() ->
     not_loaded(?LINE).
 
-%% @doc Check if a list of H3 indices completely encompasses a target
-%% index.
+%% @doc Test if a `Set' of H3 indices completely encompasses a
+%%      `Target' H3 index.
+%%
+%% `Set' can be a list of H3 indices or a binary of serialized
+%% little-endian indices.
 %%
 %% Returns `{true, Index}' if the target is covered as the returned
 %% `Index' may be a parent to `Target'. Returns `false' is `Target' is
 %% not covered.
--spec contains(_Target::h3index(), _Set::[h3index(),...]) -> false | {true, h3index()}.
+-spec contains(Target::h3index(), Set::(binary() | [h3index(),...])) -> false | {true, h3index()}.
 contains(_Target, _Set) ->
     not_loaded(?LINE).
 

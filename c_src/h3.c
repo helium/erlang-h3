@@ -963,40 +963,75 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 {
     H3Index key = 0;
 
-    if (argc != 2 || !get_h3idx(env, argv[0], &key)
-        || !enif_is_list(env, argv[1]))
+    if (argc != 2 || !get_h3idx(env, argv[0], &key))
     {
         return enif_make_badarg(env);
     }
 
-    int          key_res = h3GetResolution(key);
-    int          n       = 0;
-    ERL_NIF_TERM list    = argv[1];
-    ERL_NIF_TERM head;
-    ERL_NIF_TERM tail;
+    int key_res = h3GetResolution(key);
 
-    while (enif_get_list_cell(env, list, &head, &tail))
+    if (enif_is_list(env, argv[1]))
     {
-        H3Index idx;
-        if (!get_h3idx(env, head, &idx))
+        ERL_NIF_TERM list = argv[1];
+        ERL_NIF_TERM head;
+        ERL_NIF_TERM tail;
+
+        while (enif_get_list_cell(env, list, &head, &tail))
         {
-            return enif_make_badarg(env);
-        }
+            H3Index idx;
+            if (!get_h3idx(env, head, &idx))
+            {
+                return enif_make_badarg(env);
+            }
 
-        if (idx == key)
+            if (idx == key)
+            {
+                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
+            }
+
+            int idx_res = h3GetResolution(idx);
+
+            if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+            {
+                return enif_make_tuple2(env, ATOM_TRUE, head);
+            }
+
+            list = tail;
+        }
+    }
+    else if (enif_is_binary(env, argv[1]))
+    {
+        /* A binary containing little-endian serialized H3 indices (u64s) */
+        ErlNifBinary serialized;
+        enif_inspect_binary(env, argv[1], &serialized);
+        for (unsigned char * le_idx = serialized.data;
+             le_idx + sizeof(H3Index) < serialized.data + serialized.size;
+             le_idx += sizeof(H3Index))
         {
-            return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
+            H3Index idx =
+                ((H3Index)le_idx[7] << 56) | ((H3Index)le_idx[6] << 48)
+                | ((H3Index)le_idx[5] << 40) | ((H3Index)le_idx[4] << 32)
+                | ((H3Index)le_idx[3] << 24) | ((H3Index)le_idx[2] << 16)
+                | ((H3Index)le_idx[1] << 8) | (H3Index)le_idx[0];
+
+            if (idx == key)
+            {
+                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
+            }
+
+            int idx_res = h3GetResolution(idx);
+
+            if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+            {
+                return enif_make_tuple2(env,
+                                        ATOM_TRUE,
+                                        enif_make_uint64(env, idx));
+            }
         }
-
-        int idx_res = h3GetResolution(idx);
-
-        if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
-        {
-            return enif_make_tuple2(env, ATOM_TRUE, head);
-        }
-
-        list = tail;
-        n++;
+    }
+    else
+    {
+        return enif_make_badarg(env);
     }
 
     return ATOM_FALSE;

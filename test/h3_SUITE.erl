@@ -23,7 +23,8 @@
          grid_distance_test/1,
          res0_test/1,
          polyfill_test/1,
-         set_to_multi_polygon_test/1
+         set_to_multi_polygon_test/1,
+         contains_test/1
         ]).
 
 all() ->
@@ -45,7 +46,8 @@ all() ->
      grid_distance_test,
      res0_test,
      polyfill_test,
-     set_to_multi_polygon_test
+     set_to_multi_polygon_test,
+     contains_test
     ].
 
 init_per_testcase(_, Config) ->
@@ -266,6 +268,44 @@ set_to_multi_polygon_test(_Config) ->
      {48.859032103000000, 2.2947542404000000},
      {48.859145694800000, 2.2944214668000000}
     ]]] = OrderedMultiPolygon,
+    ok.
+
+contains_test(_Config) ->
+    Polygon = [[
+     {48.859039929560090, 2.2944849729537964},
+     {48.858898756376850, 2.2942543029785156},
+     {48.858517586793280, 2.2940987348556520},
+     {48.858422293943846, 2.2935408353805540},
+     {48.858263472125010, 2.2932994365692140},
+     {48.858108179192670, 2.2935301065444946},
+     {48.858009356166680, 2.2941148281097410},
+     {48.857610532686530, 2.2942650318145750},
+     {48.857483473211250, 2.2945010662078857},
+     {48.857631709234370, 2.2947263717651367},
+     {48.858037591336880, 2.2948980331420900},
+     {48.858115237972780, 2.2954612970352173},
+     {48.858274060261955, 2.2956919670104980},
+     {48.858429352679686, 2.2954452037811280},
+     {48.858489351893844, 2.2949087619781494},
+     {48.858888168372050, 2.2947424650192260},
+     {48.859039929560090, 2.2944849729537964}
+    ]],
+    Polyfill = lists:sort(h3:polyfill(Polygon, 11)),
+    Serialized = << <<H3:64/integer-unsigned-little>> || H3 <- Polyfill >>,
+    %% Just a little north of Eiffel Tower
+    Target = h3:from_geo({48.85845753032783, 2.294404460820376}, 12),
+    London = h3:from_geo({51.50296543634029, -0.1165640137214306}, 12),
+    %% Test list of indices contains target.
+    {true, _Parent} = h3:contains(Target, Polyfill),
+    %% Test serialized indices contains target.
+    {true, _Parent} = h3:contains(Target, Serialized),
+    %% Test that London is not included.
+    false = h3:contains(London, Polyfill),
+    false = h3:contains(London, Serialized),
+    %% Target is not contained if its resolution is larger than the
+    %% polyfill's indices.
+    false = h3:contains(h3:parent(Target, 10), Polyfill),
+    false = h3:contains(h3:parent(Target, 10), Serialized),
     ok.
 
 %% @private
