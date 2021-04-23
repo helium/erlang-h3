@@ -1,7 +1,6 @@
 # erlang-h3
 
-![Build status](https://github.com/helium/erlang-h3/workflows/CI/badge.svg)
-[![codecov](https://codecov.io/gh/helium/erlang-h3/branch/master/graph/badge.svg)](https://codecov.io/gh/helium/erlang-h3)
+[![CI](https://github.com/helium/erlang-h3/actions/workflows/ci.yml/badge.svg)](https://github.com/helium/erlang-h3/actions/workflows/ci.yml)
 [![Hex.pm](https://img.shields.io/hexpm/v/h3)](https://hex.pm/packages/h3)
 
 The `erlang-h3` library provides an Erlang binding for [Uber's
