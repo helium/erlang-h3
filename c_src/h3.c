@@ -970,6 +970,27 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
     int key_res = h3GetResolution(key);
 
+    /*
+     * In an effort to speed up membership tests in cache friendly
+     * manner, we pre-convert the key index at all possible H3 parent
+     * resolutions. Because it is only possible to convert a hex to
+     * rougher (lower res) parent index, all elements in the LUT that
+     * indices greater than the key are plain copies of the key.
+     */
+    H3Index key_res_lut[16];
+
+    for (int res = 0; res < 16; ++res)
+    {
+        if (res < key_res)
+        {
+            key_res_lut[res] = h3ToParent(key, res);
+        }
+        else
+        {
+            key_res_lut[res] = key;
+        }
+    }
+
     if (enif_is_list(env, argv[1]))
     {
         ERL_NIF_TERM list = argv[1];
@@ -984,14 +1005,9 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                 return enif_make_badarg(env);
             }
 
-            if (idx == key)
-            {
-                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
-            }
-
             int idx_res = h3GetResolution(idx);
 
-            if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+            if (key_res_lut[idx_res] == idx)
             {
                 return enif_make_tuple2(env, ATOM_TRUE, head);
             }
@@ -1016,15 +1032,11 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
 
             int idx_res = h3GetResolution(idx);
 
-            if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
+            if (key_res_lut[idx_res] == idx)
             {
                 return enif_make_tuple2(env,
                                         ATOM_TRUE,
                                         enif_make_uint64(env, idx));
-            }
-            else if (idx == key)
-            {
-                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
             }
         }
     }
