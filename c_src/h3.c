@@ -1014,11 +1014,6 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                 | ((H3Index)le_idx[3] << 24) | ((H3Index)le_idx[2] << 16)
                 | ((H3Index)le_idx[1] << 8) | (H3Index)le_idx[0];
 
-            if (idx == key)
-            {
-                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
-            }
-
             int idx_res = h3GetResolution(idx);
 
             if ((idx_res < key_res) && (h3ToParent(key, idx_res) == idx))
@@ -1026,6 +1021,10 @@ erl_contains(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[])
                 return enif_make_tuple2(env,
                                         ATOM_TRUE,
                                         enif_make_uint64(env, idx));
+            }
+            else if (idx == key)
+            {
+                return enif_make_tuple2(env, ATOM_TRUE, argv[0]);
             }
         }
     }
