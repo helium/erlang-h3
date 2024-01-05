@@ -12,7 +12,7 @@ endif()
 # upstream uber/h3
 find_package(Git REQUIRED)
 execute_process(COMMAND
-  ${GIT_EXECUTABLE} describe --tags
+  test -d .git && ${GIT_EXECUTABLE} describe --tags
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   RESULT_VARIABLE GIT_SUCCESS
   OUTPUT_VARIABLE ERLANG_H3_TAG
