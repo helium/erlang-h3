@@ -1,6 +1,6 @@
 {application,h3,
  [{description,"An OTP library"},
-  {vsn,"git"},
+  {vsn,"3.6.4.1"},
   {registered,[]},
   {applications,[kernel,stdlib]},
   {env,[]},
