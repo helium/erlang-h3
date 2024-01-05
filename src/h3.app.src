@@ -1,12 +1,9 @@
 {application,h3,
- [{description,"An OTP library"},
-  {vsn,"3.7.2-a"},
-  {registered,[]},
-  {applications,[kernel,stdlib]},
-  {env,[]},
-
-  %% hex.pm packaging:
-  {licenses, ["Apache 2.0"]},
-  {links, [{"Github", "https://github.com/helium/erlang-h3"}]},
-  {exclude_files, ["c_src/h3/*"]}
- ]}.
+             [{description,"An OTP library"},
+              {vsn,"3.7.2-b"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {licenses,["Apache 2.0"]},
+              {links,[{"Github","https://github.com/helium/erlang-h3"}]},
+              {exclude_files,["c_src/h3/*"]}]}.
