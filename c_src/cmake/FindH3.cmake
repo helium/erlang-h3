@@ -19,7 +19,7 @@ execute_process(COMMAND
   )
 if(NOT GIT_SUCCESS EQUAL "0")
   message(WARNING "could not get erlang-h3 tag, falling back on hard-coded version")
-  set(ERLANG_H3_TAG "v3.6.4")
+  set(ERLANG_H3_TAG "v3.7.2")
 endif()
 string(REGEX REPLACE "\n$" "" ERLANG_H3_TAG "${ERLANG_H3_TAG}")
 string(REGEX MATCH "^v[0-9]+\.[0-9]+\.[0-9]+" UPSTREAM_H3_GIT_TAG "${ERLANG_H3_TAG}")
